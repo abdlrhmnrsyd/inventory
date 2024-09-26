@@ -1062,7 +1062,12 @@ const MicrosoftComponent = () => {
                 </Table>
               </div>
             </div>
+<<<<<<< HEAD
             <div className="flex items-center justify-center mb-10">
+=======
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-center mb-4">
+>>>>>>> 1291e348a85a81ecc1442e228de6eb5986d3c7a1
             <button
               onClick={scrollLeft} // Attach scrollLeft function
               className="px-4 py-2 mr-2 text-white bg-gray-300 rounded-md hover:bg-gray-600" // Added margin-right
@@ -1076,7 +1081,10 @@ const MicrosoftComponent = () => {
               <ChevronRight size={18} />
             </button>
           </div>
+<<<<<<< HEAD
           </div>
+=======
+>>>>>>> 1291e348a85a81ecc1442e228de6eb5986d3c7a1
         </div>
      
     </>
