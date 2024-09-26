@@ -362,9 +362,15 @@ const MicrosoftComponent = () => {
   const toggleUploadForm = () => {
     setUploadVisible(!isUploadVisible);
   };
+  
+  //select delete rows
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-
   // Function to handle row selection
+  const toggleCheckboxes = () => {
+    setShowCheckboxes(!showCheckboxes);
+  };
+
   const handleSelectRow = (id) => {
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id)
@@ -398,12 +404,12 @@ const MicrosoftComponent = () => {
         });
         fetchMicrosoft();
         setSelectedRows([]);
+        setShowCheckboxes(false); // Hide checkboxes after deletion
       } catch (err) {
         console.error(err.message);
       }
     }
   };
-
   return (
     <>
       <div className="flex">
@@ -508,463 +514,460 @@ const MicrosoftComponent = () => {
               <option value="/zoom">Zoom</option>
               <option value="/other">Others</option>
             </select>
-
             <div className="flex-1 p-6 overflow-x-auto">
               <div className="flex items-center justify-between mb-4">
-              <div className="flex justify-end mt-4">
-  <button
-    onClick={handleDeleteSelectedRows}
-    className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-700"
-    disabled={selectedRows.length === 0}
-  >
-    <Trash2 size={16} strokeWidth={1} />
-    Delete Selected
-  </button>
-</div>
-                <input
-                  type="search"
-                  className="px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <div className="flex items-center">
+                <div className="flex items-center mt-4 space-x-2">
+                  <input
+                    type="search"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                <button
+                    onClick={toggleCheckboxes}
+                    className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-700"
+                  >
+                    Select
+                  </button>
+                  {showCheckboxes && (
+                    <button
+                      onClick={handleDeleteSelectedRows}
+                      className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-700"
+                      disabled={selectedRows.length === 0}
+                    >
+                      Confirm Delete
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
                   <button
                     onClick={toggleForm}
-                    className="px-4 py-2 mr-2 text-white transition duration-200 ease-in-out bg-blue-500 rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 text-white transition duration-200 ease-in-out bg-blue-500 rounded-md hover:bg-blue-700"
                   >
                     Add License
                   </button>
-                  <div className="flex items-center">
-                    <button
-                      onClick={toggleUploadForm} // Mengubah fungsi untuk menampilkan form upload
-                      className="px-4 py-2 text-white transition duration-200 ease-in-out bg-green-500 rounded-md hover:bg-green-700"
-                    >
-                      Import Excel
-                    </button>
-                  </div>
-
-                  {isUploadVisible && ( // Menampilkan form upload jika isUploadVisible true
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                      <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
-                        <h2 className="mb-4 text-xl font-semibold text-center">
-                          Upload Excel File
-                        </h2>
-                        <input
-                          type="file"
-                          accept=".xlsx, .xls"
-                          onChange={handleFileUpload}
-                          className="block w-full p-3 mb-4 transition duration-150 ease-in-out border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        <div className="flex justify-between mt-4">
-                          <a
-                            href="../../../public/excel/microsoft.xlsx"
-                            download
-                            className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
-                          >
-                            Download Template
-                          </a>
-
-                          <button
-                            onClick={toggleUploadForm}
-                            className="px-4 py-2 text-red-500 border border-red-500 rounded-md hover:bg-red-500 hover:text-white"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <button
+                    onClick={toggleUploadForm} // Mengubah fungsi untuk menampilkan form upload
+                    className="px-4 py-2 text-white transition duration-200 ease-in-out bg-green-500 rounded-md hover:bg-green-700"
+                  >
+                    Import Excel
+                  </button>
                 </div>
               </div>
 
-              {isFormVisible && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="h-full max-w-3xl p-8 mx-2 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-md">
-                    <h2 className="mb-4 text-xl font-semibold text-center">
-                      {form.id ? "Edit License" : "Add New License"}
-                    </h2>
-                    <form
-                      onSubmit={handleSubmit}
-                      className="grid grid-cols-3 gap-6"
-                    >
-                      {/* Column 1 */}
-                      <div className="space-y-3">
-                        <div>
-                          <label
-                            htmlFor="company_name"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Company Name <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            id="company_name"
-                            name="company_name"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.company_name}
-                            onChange={handleInputChange}
-                          >
-                            <option>Select Company Name</option>
-                            <option value="PT. Asia Pasific Rayon">
-                              PT. Asia Pasific Rayon
-                            </option>
-                            <option value="PT. Asia Pasific Yarn">
-                              PT. Asia Pasific Yarn
-                            </option>
-                            <option value="PT. Riau Andalan Pulp and Paper">
-                              PT. Riau Andalan Pulp and Paper
-                            </option>
-                            <option value="PT. Riau Andalan Kertas">
-                              PT. Riau Andalan Kertas
-                            </option>
-                            <option value="PT. Riau Power Energy">
-                              PT. Riau Power Energy
-                            </option>
-                            <option value="PT. Common Services">
-                              PT. Common Services
-                            </option>
-                          </select>
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="products_name"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Products Name
-                          </label>
-                          <select
-                            id="products_name"
-                            name="products_name"
-                            className="w-full h-12 p-2 border border-gray-300 rounded-md"
-                            value={form.products_name}
-                            onChange={handleInputChange}
-                          >
-                            <option>Select Product Name</option>
-                            <option value="Exchange Server Std User CAL 2019">
-                              Exchange Server Std User CAL 2019
-                            </option>
-                            <option value="Office MAC 2019">
-                              Office MAC 2019
-                            </option>
-                            <option value="Office Pro Plus 2019">
-                              Office Pro Plus 2019
-                            </option>
-                            <option value="Office Std 2016">
-                              Office Std 2016
-                            </option>
-                            <option value="Office Std 2019">
-                              Office Std 2019
-                            </option>
-                            <option value="Project Std 2019">
-                              Project Std 2019
-                            </option>
-                            <option value="Visio Pro 2019">
-                              Visio Pro 2019
-                            </option>
-                            <option value="Windows Remote Dekstop Server 2016">
-                              Windows Remote Dekstop Server 2016
-                            </option>
-                            <option value="Windows Remote Dekstop Server 2019">
-                              Windows Remote Dekstop Server 2019
-                            </option>
-                            <option value="Windows Server User CAL 2016">
-                              Windows Server User CAL 2016
-                            </option>
-                            <option value="Windows Server User CAL 2019">
-                              Windows Server User CAL 2019
-                            </option>
-                          </select>
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="account"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Account
-                          </label>
-                          <input
-                            type="text"
-                            id="account"
-                            name="account"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.account}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="sku_number"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            SKU Number
-                          </label>
-                          <input
-                            type="text"
-                            id="sku_number"
-                            name="sku_number"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.sku_number}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="department"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Department
-                          </label>
-                          <input
-                            type="text"
-                            id="department"
-                            name="department"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.department}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Column 2 */}
-                      <div className="space-y-3">
-                        <div>
-                          <label
-                            htmlFor="user_name"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            User Name
-                          </label>
-                          <input
-                            type="text"
-                            id="user_name"
-                            name="user_name"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.user_name}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="version"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Version
-                          </label>
-                          <input
-                            type="text"
-                            id="version"
-                            name="version"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.version}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="type_license"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Type License
-                          </label>
-                          <select
-                            id="type_license"
-                            name="type_license"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.type_license}
-                            onChange={handleInputChange}
-                          >
-                            <option>Select Type License</option>
-                            <option value="Per User">Per User</option>
-                            <option value="Per Device">Per Device</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="contact_number"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Contact Number
-                          </label>
-                          <input
-                            type="text"
-                            id="contact_number"
-                            name="contact_number"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.contact_number}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="qty"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Quantity
-                          </label>
-                          <input
-                            type="text"
-                            id="qty"
-                            name="qty"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.qty}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Column 3 */}
-                      <div className="space-y-3">
-                        <div>
-                          <label
-                            htmlFor="effective_date"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Effective Date
-                          </label>
-                          <input
-                            type="date"
-                            id="effective_date"
-                            name="effective_date"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.effective_date}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="expired_date"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Expired Date
-                          </label>
-                          <input
-                            type="date"
-                            id="expired_date"
-                            name="expired_date"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.expired_date}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="po"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            PO
-                          </label>
-                          <input
-                            type="text"
-                            id="po"
-                            name="po"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.po}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="vendor_name"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Vendor Name
-                          </label>
-                          <input
-                            type="text"
-                            id="vendor_name"
-                            name="vendor_name"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.vendor_name}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="email_vendor"
-                            className="block mb-1 font-medium text-gray-700"
-                          >
-                            Vendor Email
-                          </label>
-                          <input
-                            type="email"
-                            id="email_vendor"
-                            name="email_vendor"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            value={form.email_vendor}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Buttons */}
-                      <div className="flex justify-end col-span-3 mt-4 space-x-4">
-                        <button
-                          type="submit"
+                {isUploadVisible && ( // Menampilkan form upload jika isUploadVisible true
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
+                      <h2 className="mb-4 text-xl font-semibold text-center">
+                        Upload Excel File
+                      </h2>
+                      <input
+                        type="file"
+                        accept=".xlsx, .xls"
+                        onChange={handleFileUpload}
+                        className="block w-full p-3 mb-4 transition duration-150 ease-in-out border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <div className="flex justify-between mt-4">
+                        <a
+                          href="../../../public/excel/microsoft.xlsx"
+                          download
                           className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
                         >
-                          Save
-                        </button>
+                          Download Template
+                        </a>
+
                         <button
-                          onClick={toggleForm}
-                          className="px-4 py-2 text-red-500 hover:text-red-600"
+                          onClick={toggleUploadForm}
+                          className="px-4 py-2 text-red-500 border border-red-500 rounded-md hover:bg-red-500 hover:text-white"
                         >
                           Cancel
                         </button>
                       </div>
-                    </form>
+                    </div>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {isFormVisible && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="h-full max-w-3xl p-8 mx-2 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-md">
+                  <h2 className="mb-4 text-xl font-semibold text-center">
+                    {form.id ? "Edit License" : "Add New License"}
+                  </h2>
+                  <form
+                    onSubmit={handleSubmit}
+                    className="grid grid-cols-3 gap-6"
+                  >
+                    {/* Column 1 */}
+                    <div className="space-y-3">
+                      <div>
+                        <label
+                          htmlFor="company_name"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Company Name <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          id="company_name"
+                          name="company_name"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.company_name}
+                          onChange={handleInputChange}
+                        >
+                          <option>Select Company Name</option>
+                          <option value="PT. Asia Pasific Rayon">
+                            PT. Asia Pasific Rayon
+                          </option>
+                          <option value="PT. Asia Pasific Yarn">
+                            PT. Asia Pasific Yarn
+                          </option>
+                          <option value="PT. Riau Andalan Pulp and Paper">
+                            PT. Riau Andalan Pulp and Paper
+                          </option>
+                          <option value="PT. Riau Andalan Kertas">
+                            PT. Riau Andalan Kertas
+                          </option>
+                          <option value="PT. Riau Power Energy">
+                            PT. Riau Power Energy
+                          </option>
+                          <option value="PT. Common Services">
+                            PT. Common Services
+                          </option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="products_name"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Products Name
+                        </label>
+                        <select
+                          id="products_name"
+                          name="products_name"
+                          className="w-full h-12 p-2 border border-gray-300 rounded-md"
+                          value={form.products_name}
+                          onChange={handleInputChange}
+                        >
+                          <option>Select Product Name</option>
+                          <option value="Exchange Server Std User CAL 2019">
+                            Exchange Server Std User CAL 2019
+                          </option>
+                          <option value="Office MAC 2019">
+                            Office MAC 2019
+                          </option>
+                          <option value="Office Pro Plus 2019">
+                            Office Pro Plus 2019
+                          </option>
+                          <option value="Office Std 2016">
+                            Office Std 2016
+                          </option>
+                          <option value="Office Std 2019">
+                            Office Std 2019
+                          </option>
+                          <option value="Project Std 2019">
+                            Project Std 2019
+                          </option>
+                          <option value="Visio Pro 2019">Visio Pro 2019</option>
+                          <option value="Windows Remote Dekstop Server 2016">
+                            Windows Remote Dekstop Server 2016
+                          </option>
+                          <option value="Windows Remote Dekstop Server 2019">
+                            Windows Remote Dekstop Server 2019
+                          </option>
+                          <option value="Windows Server User CAL 2016">
+                            Windows Server User CAL 2016
+                          </option>
+                          <option value="Windows Server User CAL 2019">
+                            Windows Server User CAL 2019
+                          </option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="account"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Account
+                        </label>
+                        <input
+                          type="text"
+                          id="account"
+                          name="account"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.account}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="sku_number"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          SKU Number
+                        </label>
+                        <input
+                          type="text"
+                          id="sku_number"
+                          name="sku_number"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.sku_number}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="department"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Department
+                        </label>
+                        <input
+                          type="text"
+                          id="department"
+                          name="department"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.department}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Column 2 */}
+                    <div className="space-y-3">
+                      <div>
+                        <label
+                          htmlFor="user_name"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          User Name
+                        </label>
+                        <input
+                          type="text"
+                          id="user_name"
+                          name="user_name"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.user_name}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="version"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Version
+                        </label>
+                        <input
+                          type="text"
+                          id="version"
+                          name="version"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.version}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="type_license"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Type License
+                        </label>
+                        <select
+                          id="type_license"
+                          name="type_license"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.type_license}
+                          onChange={handleInputChange}
+                        >
+                          <option>Select Type License</option>
+                          <option value="Per User">Per User</option>
+                          <option value="Per Device">Per Device</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="contact_number"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Contact Number
+                        </label>
+                        <input
+                          type="text"
+                          id="contact_number"
+                          name="contact_number"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.contact_number}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="qty"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Quantity
+                        </label>
+                        <input
+                          type="text"
+                          id="qty"
+                          name="qty"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.qty}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Column 3 */}
+                    <div className="space-y-3">
+                      <div>
+                        <label
+                          htmlFor="effective_date"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Effective Date
+                        </label>
+                        <input
+                          type="date"
+                          id="effective_date"
+                          name="effective_date"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.effective_date}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="expired_date"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Expired Date
+                        </label>
+                        <input
+                          type="date"
+                          id="expired_date"
+                          name="expired_date"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.expired_date}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="po"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          PO
+                        </label>
+                        <input
+                          type="text"
+                          id="po"
+                          name="po"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.po}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="vendor_name"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Vendor Name
+                        </label>
+                        <input
+                          type="text"
+                          id="vendor_name"
+                          name="vendor_name"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.vendor_name}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="email_vendor"
+                          className="block mb-1 font-medium text-gray-700"
+                        >
+                          Vendor Email
+                        </label>
+                        <input
+                          type="email"
+                          id="email_vendor"
+                          name="email_vendor"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={form.email_vendor}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex justify-end col-span-3 mt-4 space-x-4">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={toggleForm}
+                        className="px-4 py-2 text-red-500 hover:text-red-600"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              )}
-              <div
+              </div>
+            )}
+            <div
                 className="overflow-x-auto max-h-96"
-                style={{ overflowY: "scroll", overflowX: "auto" }} // Ensure horizontal overflow is enabled
+                style={{ overflowY: "scroll", overflowX: "auto" }}
                 ref={tableContainerRef}
               >
-                <div style={{ width: "2500px" }}>
-                  <Table style={{ minWidth: "2500px" }}>
+                <div style={{ width: "3000px" }}>
+                  <Table style={{ minWidth: "3000px" }}>
                     <TableHeader>
-                      <TableCell className="text-center">Select</TableCell>
-                      <TableCell className="text-center">No</TableCell>
-                      <TableCell className="text-center">
-                        Company Name
-                      </TableCell>
-                      <TableCell className="text-center">Department</TableCell>
-                      <TableCell className="text-center">User Name</TableCell>
-                      <TableCell className="text-center">Account</TableCell>
-                      <TableCell className="text-center">
-                        Products Name
-                      </TableCell>
-                      <TableCell className="text-center">SKU Number</TableCell>
-                      <TableCell className="text-center">Version</TableCell>
-                      <TableCell className="text-center">
-                        Type License
-                      </TableCell>
-                      <TableCell className="text-center">
-                        Contact Number
-                      </TableCell>
-                      <TableCell className="text-center">Qty/User</TableCell>
-                      <TableCell className="text-center">
-                        Effective Date
-                      </TableCell>
-                      <TableCell className="text-center">
-                        Expired Date
-                      </TableCell>
-                      <TableCell className="text-center">
-                        Remaining Days
-                      </TableCell>
-                      <TableCell className="text-center">PO</TableCell>
-                      <TableCell className="text-center">Vendor Name</TableCell>
-                      <TableCell className="text-center">
-                        Email Vendor
-                      </TableCell>
-                      <TableCell className="text-center">Action</TableCell>
-                    </TableHeader>
-                    {microsoftFiltered.map((microsoft, index) => {
-                      const remainingDays = calculateRemainingDays(
-                        microsoft.expired_date
-                      );
-                      return (
-                        <TableRow key={microsoft.id}>
+                      {showCheckboxes && (
+                        <TableCell className="text-center">Select</TableCell>
+                      )}
+                    <TableCell className="text-center">No</TableCell>
+                    <TableCell className="text-center">Company Name</TableCell>
+                    <TableCell className="text-center">Department</TableCell>
+                    <TableCell className="text-center">User Name</TableCell>
+                    <TableCell className="text-center">Account</TableCell>
+                    <TableCell className="text-center">Products Name</TableCell>
+                    <TableCell className="text-center">SKU Number</TableCell>
+                    <TableCell className="text-center">Version</TableCell>
+                    <TableCell className="text-center">Type License</TableCell>
+                    <TableCell className="text-center">
+                      Contact Number
+                    </TableCell>
+                    <TableCell className="text-center">Qty/User</TableCell>
+                    <TableCell className="text-center">
+                      Effective Date
+                    </TableCell>
+                    <TableCell className="text-center">Expired Date</TableCell>
+                    <TableCell className="text-center">
+                      Remaining Days
+                    </TableCell>
+                    <TableCell className="text-center">PO</TableCell>
+                    <TableCell className="text-center">Vendor Name</TableCell>
+                    <TableCell className="text-center">Email Vendor</TableCell>
+                    <TableCell className="text-center">Action</TableCell>
+                  </TableHeader>
+                  {microsoftFiltered.map((microsoft, index) => {
+                    const remainingDays = calculateRemainingDays(
+                      microsoft.expired_date
+                    );
+                    return (
+                      <TableRow key={microsoft.id}>
+                        {showCheckboxes && (
                           <TableCell className="text-center">
                             <input
                               type="checkbox"
@@ -972,110 +975,110 @@ const MicrosoftComponent = () => {
                               onChange={() => handleSelectRow(microsoft.id)}
                             />
                           </TableCell>
-                          <TableCell className="text-center">
-                            {index + 1}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.company_name}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.department}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.user_name}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.account}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.products_name}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.sku_number}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.version}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.type_license}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.contact_number}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.qty}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {formatDate(microsoft.effective_date)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {formatDate(microsoft.expired_date)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span
-                              style={{
-                                color:
-                                  remainingDays <= 0
-                                    ? "red"
-                                    : remainingDays <= 90
-                                    ? "orange"
-                                    : "inherit",
-                              }}
+                        )}
+                        <TableCell className="text-center">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.company_name}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.department}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.user_name}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.account}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.products_name}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.sku_number}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.version}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.type_license}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.contact_number}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.qty}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {formatDate(microsoft.effective_date)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {formatDate(microsoft.expired_date)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span
+                            style={{
+                              color:
+                                remainingDays <= 0
+                                  ? "red"
+                                  : remainingDays <= 90
+                                  ? "orange"
+                                  : "inherit",
+                            }}
+                          >
+                            {remainingDays > 0
+                              ? `${remainingDays} days`
+                              : "Expired"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.po}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.vendor_name}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {microsoft.email_vendor}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center space-x-1">
+                            <button
+                              onClick={() => handleEdit(microsoft)}
+                              className="px-2 py-1 text-white transition duration-300 ease-in-out transform bg-blue-500 rounded-md hover:bg-blue-700 hover:shadow-lg hover:scale-105"
                             >
-                              {remainingDays > 0
-                                ? `${remainingDays} days`
-                                : "Expired"}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.po}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.vendor_name}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {microsoft.email_vendor}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-center space-x-1">
-                              <button
-                                onClick={() => handleEdit(microsoft)}
-                                className="px-2 py-1 text-white transition duration-300 ease-in-out transform bg-blue-500 rounded-md hover:bg-blue-700 hover:shadow-lg hover:scale-105"
-                              >
-                                <Pencil size={16} strokeWidth={1} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(microsoft.id)}
-                                className="px-2 py-1 text-white transition duration-300 ease-in-out transform bg-red-500 rounded-md hover:bg-red-700 hover:shadow-lg hover:scale-105"
-                              >
-                                <Trash2 size={16} strokeWidth={1} />
-                              </button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </Table>
-                </div>
+                              <Pencil size={16} strokeWidth={1} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(microsoft.id)}
+                              className="px-2 py-1 text-white transition duration-300 ease-in-out transform bg-red-500 rounded-md hover:bg-red-700 hover:shadow-lg hover:scale-105"
+                            >
+                              <Trash2 size={16} strokeWidth={1} />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </Table>
               </div>
             </div>
-            <div className="flex items-center justify-center mt-0">
-              <button
-                onClick={scrollLeft} // Attach scrollLeft function
-                className="px-4 py-2 mr-2 text-white bg-gray-300 rounded-md hover:bg-gray-600" // Added margin-right
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={scrollRight} // Attach scrollRight function
-                className="px-4 py-2 text-white bg-gray-300 rounded-md hover:bg-gray-600"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-center mb-4">
+            <button
+              onClick={scrollLeft} // Attach scrollLeft function
+              className="px-4 py-2 mr-2 text-white bg-gray-300 rounded-md hover:bg-gray-600" // Added margin-right
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={scrollRight} // Attach scrollRight function
+              className="px-4 py-2 text-white bg-gray-300 rounded-md hover:bg-gray-600"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
-      </div>
+     
     </>
   );
 };
