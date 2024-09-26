@@ -1062,7 +1062,7 @@ const MicrosoftComponent = () => {
                 </Table>
               </div>
             </div>
-            <div className="flex items-center justify-center mt-0">
+            <div className="flex items-center justify-center mt-2">
               <button
                 onClick={scrollLeft} // Attach scrollLeft function
                 className="px-4 py-2 mr-2 text-white bg-gray-300 rounded-md hover:bg-gray-600" // Added margin-right
