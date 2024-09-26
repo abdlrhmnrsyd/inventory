@@ -433,10 +433,9 @@ app.post('/microsoft/import', async (req, res) => {
       try {
         item.effective_date = convertExcelDate(item.effective_date);
         item.expired_date = convertExcelDate(item.expired_date);
-        item.status = item.status.toUpperCase(); // Convert status to uppercase
         await pool.query(
-          'INSERT INTO microsoft (company_name, department, user_name, account, products_name, sku_number, version, type_license, contact_number, qty, effective_date, expired_date, po, vendor_name, email_vendor, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)',
-          [item.company_name, item.department, item.user_name, item.account, item.products_name, item.sku_number, item.version, item.type_license, item.contact_number, item.qty, item.effective_date, item.expired_date, item.po, item.vendor_name, item.email_vendor, item.status]
+          'INSERT INTO microsoft (company_name, department, user_name, account, products_name, sku_number, version, type_license, contact_number, qty, effective_date, expired_date, po, vendor_name, email_vendor) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)',
+          [item.company_name, item.department, item.user_name, item.account, item.products_name, item.sku_number, item.version, item.type_license, item.contact_number, item.qty, item.effective_date, item.expired_date, item.po, item.vendor_name, item.email_vendor,]
         );
       } catch (itemError) {
         console.error('Error processing item:', JSON.stringify(item, null, 2), itemError);

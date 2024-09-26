@@ -362,46 +362,11 @@ const MicrosoftComponent = () => {
   const toggleUploadForm = () => {
     setUploadVisible(!isUploadVisible);
   };
-  const [selectedRows, setSelectedRows] = useState([]);
 
-  // Function to handle row selection
-  const handleSelectRow = (id) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(id)
-        ? prevSelectedRows.filter((rowId) => rowId !== id)
-        : [...prevSelectedRows, id]
-    );
-  };
+  const [isSelectVisible, setSelectVisible] = useState(false);
 
-  // Function to handle deletion of selected rows
-  const handleDeleteSelectedRows = async () => {
-    const result = await Swal.fire({
-      title: "Confirmation",
-      text: "Are you sure you want to delete the selected items?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete!",
-      cancelButtonText: "Cancel",
-    });
-    if (result.isConfirmed) {
-      try {
-        await Promise.all(
-          selectedRows.map((id) =>
-            axios.delete(`http://localhost:3001/microsoft/${id}`)
-          )
-        );
-        Swal.fire({
-          title: "Deleted!",
-          text: "Selected licenses removed successfully.",
-          icon: "success",
-          confirmButtonText: "OK",
-        });
-        fetchMicrosoft();
-        setSelectedRows([]);
-      } catch (err) {
-        console.error(err.message);
-      }
-    }
+  const toggleSelect = () => {
+    setSelectVisible(!isSelectVisible);
   };
 
   return (
@@ -511,23 +476,21 @@ const MicrosoftComponent = () => {
 
             <div className="flex-1 p-6 overflow-x-auto">
               <div className="flex items-center justify-between mb-4">
-              <div className="flex justify-end mt-4">
-  <button
-    onClick={handleDeleteSelectedRows}
-    className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-700"
-    disabled={selectedRows.length === 0}
-  >
-    <Trash2 size={16} strokeWidth={1} />
-    Delete Selected
-  </button>
-</div>
-                <input
-                  type="search"
-                  className="px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <div className="flex items-center">
+                  <button
+                    onClick={toggleSelect}
+                    className="px-4 py-2 mr-2 text-white transition duration-200 ease-in-out bg-blue-500 rounded-md hover:bg-blue-700"
+                  >
+                    Show Select
+                  </button>
+                  <input
+                    type="search"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
                 <div className="flex items-center">
                   <button
                     onClick={toggleForm}
@@ -537,14 +500,14 @@ const MicrosoftComponent = () => {
                   </button>
                   <div className="flex items-center">
                     <button
-                      onClick={toggleUploadForm} // Mengubah fungsi untuk menampilkan form upload
+                      onClick={toggleUploadForm}
                       className="px-4 py-2 text-white transition duration-200 ease-in-out bg-green-500 rounded-md hover:bg-green-700"
                     >
                       Import Excel
                     </button>
                   </div>
 
-                  {isUploadVisible && ( // Menampilkan form upload jika isUploadVisible true
+                  {isUploadVisible && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                       <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
                         <h2 className="mb-4 text-xl font-semibold text-center">
@@ -923,7 +886,6 @@ const MicrosoftComponent = () => {
                 <div style={{ width: "2500px" }}>
                   <Table style={{ minWidth: "2500px" }}>
                     <TableHeader>
-                      <TableCell className="text-center">Select</TableCell>
                       <TableCell className="text-center">No</TableCell>
                       <TableCell className="text-center">
                         Company Name
@@ -965,13 +927,6 @@ const MicrosoftComponent = () => {
                       );
                       return (
                         <TableRow key={microsoft.id}>
-                          <TableCell className="text-center">
-                            <input
-                              type="checkbox"
-                              checked={selectedRows.includes(microsoft.id)}
-                              onChange={() => handleSelectRow(microsoft.id)}
-                            />
-                          </TableCell>
                           <TableCell className="text-center">
                             {index + 1}
                           </TableCell>
