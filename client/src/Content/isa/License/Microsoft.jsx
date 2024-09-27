@@ -366,12 +366,22 @@ const MicrosoftComponent = () => {
   //select delete rows
   const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
   // Function to handle row selection
   const toggleCheckboxes = () => {
     setShowCheckboxes(!showCheckboxes);
     if (showCheckboxes) {
       setSelectedRows([]); // Clear selected rows when hiding checkboxes
+      setSelectAll(false); // Reset Select All when hiding checkboxes
     }
+  };
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedRows([]); // Deselect all rows
+    } else {
+      setSelectedRows(microsoftFiltered.map((microsoft) => microsoft.id)); // Select all rows
+    }
+    setSelectAll(!selectAll); // Toggle Select All state
   };
 
   const handleSelectRow = (id) => {
@@ -932,9 +942,15 @@ const MicrosoftComponent = () => {
           >
             <div style={{ width: "3000px" }}>
               <Table style={{ minWidth: "3000px" }}>
-                <TableHeader>
+              <TableHeader>
                   {showCheckboxes && (
-                    <TableCell className="text-center">Select</TableCell>
+                    <TableCell className="text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                      />
+                    </TableCell>
                   )}
                   <TableCell className="text-center">No</TableCell>
                   <TableCell className="text-center">Company Name</TableCell>
@@ -961,15 +977,15 @@ const MicrosoftComponent = () => {
                   );
                   return (
                     <TableRow key={microsoft.id}>
-                      {showCheckboxes && (
-                        <TableCell className="text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedRows.includes(microsoft.id)}
-                            onChange={() => handleSelectRow(microsoft.id)}
-                          />
-                        </TableCell>
-                      )}
+                    {showCheckboxes && (
+                      <TableCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.includes(microsoft.id)}
+                          onChange={() => handleSelectRow(microsoft.id)}
+                        />
+                      </TableCell>
+                    )}
                       <TableCell className="text-center">{index + 1}</TableCell>
                       <TableCell className="text-center">
                         {microsoft.company_name}

@@ -278,6 +278,69 @@ const PcComponent = () => {
       pc.serial_number.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+//select delete rows
+const [showCheckboxes, setShowCheckboxes] = useState(false);
+const [selectedRows, setSelectedRows] = useState([]);
+const [selectAll, setSelectAll] = useState(false);
+// Function to handle row selection
+const toggleCheckboxes = () => {
+  setShowCheckboxes(!showCheckboxes);
+  if (showCheckboxes) {
+    setSelectedRows([]); // Clear selected rows when hiding checkboxes
+    setSelectAll(false); // Reset Select All when hiding checkboxes
+  }
+};
+
+const handleSelectRow = (id) => {
+  setSelectedRows((prevSelectedRows) =>
+    prevSelectedRows.includes(id)
+      ? prevSelectedRows.filter((rowId) => rowId !== id)
+      : [...prevSelectedRows, id]
+  );
+};
+
+const handleSelectAll = () => {
+  if (selectAll) {
+    setSelectedRows([]); // Deselect all rows
+  } else {
+    setSelectedRows(pcsFiltered.map((pc) => pc.id)); // Select all rows
+  }
+  setSelectAll(!selectAll); // Toggle Select All state
+};
+// Function to handle deletion of selected rows
+const handleDeleteSelectedRows = async () => {
+  const result = await Swal.fire({
+    title: "Confirmation",
+    text: `Are you sure you want to delete the selected ${selectedRows.length} items?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete!",
+    cancelButtonText: "Cancel",
+  });
+  if (result.isConfirmed) {
+    try {
+      await Promise.all(
+        selectedRows.map((id) =>
+          axios.delete(`http://localhost:3001/pc/${id}`)
+        )
+      );
+      Swal.fire({
+        title: "Deleted!",
+        text: `${selectedRows.length} licenses removed successfully.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+      fetchPCs();
+      setSelectedRows([]); // Clear selected rows after deletion
+    } catch (err) {
+      console.error(err.message);
+    }
+  } else {
+    // Clear selected rows if user cancels
+    setSelectedRows([]);
+  }
+};
+  
   return (
     <>
       <div className="flex">
@@ -329,11 +392,11 @@ const PcComponent = () => {
         </Sidebar>
 
         <div className="flex-1 p-6 overflow-x-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="relative w-full max-w-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center mt-4 space-x-2">
               <input
                 type="search"
-                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md"
+               className="px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -344,6 +407,21 @@ const PcComponent = () => {
                   className="absolute text-gray-500 transform -translate-y-1/2 right-2 top-1/2 hover:text-gray-700"
                 >
                 
+                </button>
+              )}
+               <button
+                onClick={toggleCheckboxes}
+                className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-700"
+              >
+                {showCheckboxes ? "Cancel Selection " : "Select"}
+              </button>
+              {showCheckboxes && (
+                <button
+                  onClick={handleDeleteSelectedRows}
+                  className="flex items-center px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-700"
+                  disabled={selectedRows.length === 0}
+                >
+                  <Trash2 size={21} strokeWidth={1} />
                 </button>
               )}
             </div>
@@ -625,7 +703,16 @@ const PcComponent = () => {
           >
             <div style={{ width: "2000px" }}>
               <Table style={{ minWidth: "2000px" }}>
-                <TableHeader>
+              <TableHeader>
+                  {showCheckboxes && (
+                    <TableCell className="text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>No</TableCell>
                   <TableCell>IT Code</TableCell>
                   <TableCell>Brand</TableCell>
@@ -643,6 +730,15 @@ const PcComponent = () => {
 
                 {pcsFiltered.map((pc, index) => (
                   <TableRow key={pc.id}>
+                    {showCheckboxes && (
+                      <TableCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.includes(pc.id)}
+                          onChange={() => handleSelectRow(pc.id)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{pc.it_code}</TableCell>
                     <TableCell>{pc.brand}</TableCell>
@@ -687,18 +783,18 @@ const PcComponent = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center justify-center mt-2">
             <button
               onClick={scrollLeft} // Attach scrollLeft function
-              className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
-            >
-              <ChevronLeft size={24} />
+              className="px-4 py-2 mr-2 text-white bg-gray-300 rounded-md hover:bg-gray-600" // Added margin-right
+              >
+                <ChevronLeft size={18} />
             </button>
             <button
               onClick={scrollRight} // Attach scrollRight function
-              className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
-            >
-              <ChevronRight size={24} />
+              className="px-4 py-2 text-white bg-gray-300 rounded-md hover:bg-gray-600"
+              >
+                <ChevronRight size={18} />
             </button>
           </div>
         </div>
