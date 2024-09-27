@@ -453,10 +453,36 @@ app.post('/pc/import', async (req, res) => {
   console.log('Received data:', JSON.stringify(req.body, null, 2));
   try {
     const data = req.body;
+    const ipAddresses = new Set();
+    const macAddresses = new Set();
+    const duplicates = [];
+
     for (const item of data) {
       console.log('Processing item:', JSON.stringify(item, null, 2));
       try {
         item.status = item.status.toUpperCase(); // Convert status to uppercase
+
+        // Check for duplicates in the current batch
+        if (ipAddresses.has(item.ip_address) || macAddresses.has(item.mac_address)) {
+          duplicates.push(item);
+          continue;
+        }
+
+        // Check for duplicates in the database
+        const duplicateCheck = await pool.query(
+          'SELECT * FROM pc WHERE ip_address = $1 OR mac_address = $2',
+          [item.ip_address, item.mac_address]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+          duplicates.push(item);
+          continue;
+        }
+
+        // Add to sets to track duplicates in the current batch
+        ipAddresses.add(item.ip_address);
+        macAddresses.add(item.mac_address);
+
         await pool.query(
           'INSERT INTO pc (it_code, brand, serial_number, ip_address, mac_address, host_name, location, business_unit, department, username, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
           [
@@ -475,9 +501,13 @@ app.post('/pc/import', async (req, res) => {
         );
       } catch (itemError) {
         console.error('Error processing item:', JSON.stringify(item, null, 2), itemError);
-
       }
     }
+
+    if (duplicates.length > 0) {
+      return res.status(400).json({ message: 'Duplicate data found', duplicates });
+    }
+
     res.json({ message: 'Data imported successfully' });
   } catch (error) {
     console.error('Server error:', error);

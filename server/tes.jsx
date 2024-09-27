@@ -53,8 +53,6 @@ const PcComponent = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [macError, setMacError] = useState("");
-  const [isIpDuplicate, setIsIpDuplicate] = useState(false); // State to track if IP is duplicate
-  const [isMacAddressDuplicate, setIsMacAddressDuplicate] = useState(false); // State to track if mac addres is duplicate
 
   const tableContainerRef = useRef(null);
 
@@ -113,22 +111,22 @@ const PcComponent = () => {
     if (name === "ip_address") {
       const isDuplicateIP = pcs.some((pc) => pc.ip_address === value);
       if (isDuplicateIP) {
-        setError("IP address already exists. Please enter a unique IP address.");
-        setIsIpDuplicate(true); // Set IP duplicate state to true
+        setError(
+          "IP address already exists. Please enter a unique IP address."
+        );
       } else {
         setError("");
-        setIsIpDuplicate(false); // Set IP duplicate state to false
       }
     }
 
     if (name === "mac_address") {
       const isDuplicateMAC = pcs.some((pc) => pc.mac_address === value);
-     if (isDuplicateMAC) {
-         setMacError("Mac address already exists. Please enter a unique IP address.");
-        setIsMacAddressDuplicate(true); // Set IP duplicate state to true
+      if (isDuplicateMAC) {
+        setMacError(
+          "MAC address already exists. Please enter a unique MAC address."
+        );
       } else {
         setMacError("");
-        setIsMacAddressDuplicate(false); // Set IP duplicate state to false
       }
     }
   };
@@ -143,14 +141,6 @@ const PcComponent = () => {
       return;
     }
 
-    // Check for duplicate IP address
-    const isDuplicateMAC = pcs.some((pc) => pc.mac_address === form.mac_address);
-    if (isDuplicateMAC) {
-      showAlert("Mac address already exists. Please enter a unique Mac address.");
-      return;
-    }
-
-    
     if (
       !form.it_code ||
       !form.brand ||
@@ -232,7 +222,13 @@ const PcComponent = () => {
     }
   };
 
- 
+  const toggleForm = () => {
+    setFormVisible(!isFormVisible);
+  };
+
+  const toggleImportForm = () => {
+    setImportFormVisible(!isImportFormVisible);
+  };
 
   const showAlert = (message, iconType = "warning") => {
     Swal.fire({
@@ -345,33 +341,6 @@ const handleDeleteSelectedRows = async () => {
   }
 };
   
-const toggleForm = () => {
-  setFormVisible(!isFormVisible);
-  setError(""); // Clear IP error
-  setMacError(""); // Clear MAC error
-  setIsIpDuplicate(false); // Reset IP duplicate state
-  setIsMacAddressDuplicate(false); // Reset MAC duplicate state
-  if (isFormVisible) {
-    setForm({
-      id: "",
-      it_code: "",
-      brand: "",
-      serial_number: "",
-      ip_address: "",
-      mac_address: "",
-      host_name: "",
-      location: "",
-      business_unit: "",
-      department: "",
-      username: "",
-      status: "",
-    });
-  }
-};
-
-const toggleImportForm = () => {
-  setImportFormVisible(!isImportFormVisible);
-};
   return (
     <>
       <div className="flex">
@@ -497,7 +466,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.it_code}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -515,7 +483,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.brand}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -533,7 +500,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.serial_number}
                       onChange={handleInputChange}
-                     disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -551,7 +517,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.ip_address}
                       onChange={handleInputChange}
-                      disabled={isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                     {error && <p className="text-red-500">{error}</p>}
                   </div>
@@ -570,7 +535,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.mac_address}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate} // Disable if IP and MAC is duplicate
                     />
                     {macError && <p className="text-red-500">{macError}</p>}
                   </div>
@@ -589,7 +553,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.host_name}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -607,7 +570,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.location}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -625,7 +587,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.business_unit}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -643,7 +604,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.department}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -661,7 +621,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.username}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     />
                   </div>
                   <div>
@@ -677,7 +636,6 @@ const toggleImportForm = () => {
                       className="w-full p-1 border border-gray-300 rounded-md"
                       value={form.status}
                       onChange={handleInputChange}
-                      disabled={isIpDuplicate || isMacAddressDuplicate} // Disable if IP and MAC is duplicate
                     >
                       <option value="">Select Status</option>
                       <option value="OK">OK</option>
