@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
 const { exec } = require('child_process'); 
+const fs = require('fs');
 
 
 const app = express();
@@ -515,23 +516,37 @@ app.post('/pc/import', async (req, res) => {
   }
 });
 
-app.post('/open-folder', (req, res) => {
+
+// Endpoint to get folder contents
+app.post('/folder-contents', (req, res) => {
   const { folderPath } = req.body;
 
-  // Logika untuk membuka folder
-  console.log(`Membuka folder: ${folderPath}`);
+  fs.readdir(folderPath, (err, files) => {
+    if (err) {
+      console.error(`Error reading folder: ${err.message}`);
+      return res.status(500).json({ error: 'Gagal membaca isi folder.' });
+    }
+    res.json({ files });
+  });
+});
 
-  // Perintah untuk membuka file manager sesuai OS
+app.post('/open-file', (req, res) => {
+  const { filePath } = req.body;
+
+  // Logika untuk membuka file
+  console.log(`Membuka file: ${filePath}`);
+
+  // Perintah untuk membuka file sesuai OS
   let command;
   switch (process.platform) {
     case 'win32':
-      command = `start "" "${folderPath}"`; // Windows
+      command = `start "" "${filePath}"`; // Windows
       break;
     case 'darwin':
-      command = `open "${folderPath}"`; // macOS
+      command = `open "${filePath}"`; // macOS
       break;
     case 'linux':
-      command = `xdg-open "${folderPath}"`; // Linux
+      command = `xdg-open "${filePath}"`; // Linux
       break;
     default:
       return res.status(400).json({ error: 'Platform tidak didukung.' });
@@ -539,10 +554,10 @@ app.post('/open-folder', (req, res) => {
 
   exec(command, (error) => {
     if (error) {
-      console.error(`Error membuka folder: ${error.message}`);
-      return res.status(500).json({ error: 'Gagal membuka folder.' });
+      console.error(`Error membuka file: ${error.message}`);
+      return res.status(500).json({ error: 'Gagal membuka file.' });
     }
-    res.json({ message: `Folder ${folderPath} berhasil dibuka!` });
+    res.json({ message: `File ${filePath} berhasil dibuka!` });
   });
 });
 
