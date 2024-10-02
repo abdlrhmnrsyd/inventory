@@ -421,9 +421,11 @@ app.delete("/microsoft/:id", async (req, res) => {
 });
 
 function convertExcelDate(excelDate) {
-
   const date = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
-  return date.toISOString().split('T')[0];
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 app.post('/microsoft/import', async (req, res) => {
@@ -743,6 +745,83 @@ app.delete("/vendor-repair/:id", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
+  }
+});
+
+
+app.post('/vendor-repair/import', async (req, res) => {
+  console.log('Received data:', JSON.stringify(req.body, null, 2));
+  try {
+    const data = req.body;
+    const ticketNumbers = new Set();
+    const duplicates = [];
+
+    for (const item of data) {
+      console.log('Processing item:', JSON.stringify(item, null, 2));
+      try {
+        // Convert dates to DD/MM/YYYY format
+        item.repair_date = convertExcelDate(item.repair_date);
+        item.quotation_date = convertExcelDate(item.quotation_date);
+        item.date = convertExcelDate(item.date);
+
+        // Check for duplicates in the current batch
+        if (ticketNumbers.has(item.ticket_number)) {
+          duplicates.push(item);
+          continue;
+        }
+
+        // Check for duplicates in the database
+        const duplicateCheck = await pool.query(
+          'SELECT * FROM vendor_repair WHERE ticket_number = $1',
+          [item.ticket_number]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+          duplicates.push(item);
+          continue;
+        }
+
+        // Add to sets to track duplicates in the current batch
+        ticketNumbers.add(item.ticket_number);
+
+        await pool.query(
+          'INSERT INTO vendor_repair (repair_date, ticket_number, ageing, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery, date, created_by_ses, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)',
+          [
+            item.repair_date,
+            item.ticket_number,
+            item.ageing,
+            item.engineer_name,
+            item.username,
+            item.bu_name,
+            item.material_name,
+            item.brand,
+            item.type,
+            item.serial_number,
+            item.cost_center,
+            item.pr_number,
+            item.po_number,
+            item.quotation_date,
+            item.cost_without,
+            item.status,
+            item.vendor_delivery,
+            item.date,
+            item.created_by_ses,
+            item.remarks,
+          ]
+        );
+      } catch (itemError) {
+        console.error('Error processing item:', JSON.stringify(item, null, 2), itemError);
+      }
+    }
+
+    if (duplicates.length > 0) {
+      return res.status(400).json({ message: 'Duplicate data found', duplicates });
+    }
+
+    res.json({ message: 'Data imported successfully' });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'An error occurred while importing data', details: error.message, stack: error.stack });
   }
 });
 

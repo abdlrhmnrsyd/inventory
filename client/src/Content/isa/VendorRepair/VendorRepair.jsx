@@ -126,7 +126,7 @@ const VendorRepairComponent = () => {
       name === "quotation_date" ||
       name === "date"
     ) {
-      formattedValue = dayjs(value, "YYYY-MM-DD").format("DD-MM-YY");
+      formattedValue = dayjs(value).format("YYYY-MM-DD"); // Ensure the format is YYYY-MM-DD
     }
 
     setForm({ ...form, [name]: formattedValue });
@@ -279,6 +279,7 @@ const VendorRepairComponent = () => {
   };
 
   const handleFileUpload = async (e) => {
+    e.preventDefault();
     const file = e.target.files[0];
     const reader = new FileReader();
 
@@ -531,6 +532,15 @@ const VendorRepairComponent = () => {
                 <div style={{ width: "3000px" }}>
                   <Table style={{ minWidth: "3000px" }}>
                     <TableHeader>
+                      {showCheckboxes && (
+                        <TableCell className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell>No</TableCell>
                       <TableCell>Repair Date</TableCell>
                       <TableCell>Ticket Number</TableCell>
@@ -556,6 +566,15 @@ const VendorRepairComponent = () => {
                     </TableHeader>
                     {vendorRepairFiltered.map((repair, index) => (
                       <TableRow key={repair.id}>
+                        {showCheckboxes && (
+                          <TableCell className="text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedRows.includes(repair.id)}
+                              onChange={() => handleSelectRow(repair.id)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{formatDate(repair.repair_date)}</TableCell>
                         <TableCell>{repair.ticket_number}</TableCell>
@@ -617,9 +636,9 @@ const VendorRepairComponent = () => {
               </div>
 
               {isFormVisible && (
-                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                 <div className="h-full max-w-3xl p-8 mx-2 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-md">
-                   <h2 className="mb-4 text-xl font-semibold text-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="h-full max-w-3xl p-8 mx-2 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-md">
+                    <h2 className="mb-4 text-xl font-semibold text-center">
                       {form.id ? "Edit Vendor Repair" : "Add Vendor Repair"}
                     </h2>
                     <form
@@ -793,14 +812,18 @@ const VendorRepairComponent = () => {
                       </div>
                       <div className="col-span-1">
                         <label htmlFor="status">Status</label>
-                        <input
-                          type="text"
+                        <select
                           id="status"
                           name="status"
                           value={form.status}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                        />
+                        >
+                          <option>Select Status</option>
+                          <option value="Repair">Repair</option>
+                          <option value="Finished">Finished</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
                       </div>
                       <div className="col-span-1">
                         <label htmlFor="vendor_delivery">Vendor Delivery</label>
@@ -861,6 +884,38 @@ const VendorRepairComponent = () => {
                         </button>
                       </div>
                     </form>
+                  </div>
+                </div>
+              )}
+
+              {isImportFormVisible && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
+                    <h2 className="mb-4 text-xl font-semibold text-center">
+                      Upload Excel File
+                    </h2>
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      onChange={handleFileUpload}
+                      className="block w-full p-3 mb-4 transition duration-150 ease-in-out border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div className="flex justify-between mt-4">
+                      <a
+                        href="../../../../public/excel/vendor repair (1).xlsx"
+                        download
+                        className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                      >
+                        Download Template
+                      </a>
+
+                      <button
+                        onClick={toggleImportForm}
+                        className="px-4 py-2 text-red-500 border border-red-500 rounded-md hover:bg-red-500 hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
