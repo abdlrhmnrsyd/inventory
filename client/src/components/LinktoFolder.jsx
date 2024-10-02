@@ -1,72 +1,79 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { Trash2, Eye, Info, ArrowLeft } from "lucide-react";
 
 function LinktoFolder() {
   const [folderPath, setFolderPath] = useState("");
-  const [folderTitle, setFolderTitle] = useState(""); // State untuk menyimpan judul folder
-  const [savedPaths, setSavedPaths] = useState([]); // Array untuk menyimpan semua path yang disimpan
-  const [folderContents, setFolderContents] = useState([]); // State untuk menyimpan isi folder
+  const [savedPaths, setSavedPaths] = useState([]);
+  const [folderContents, setFolderContents] = useState([]);
+  const [isViewingContents, setIsViewingContents] = useState(false);
+  const [folderTitle, setFolderTitle] = useState("");
+  const [currentPath, setCurrentPath] = useState("");
 
-  // Load saved paths from localStorage on component mount
   useEffect(() => {
-    const storedPaths = JSON.parse(localStorage.getItem("savedPaths")) || [];
-    setSavedPaths(storedPaths);
+    const loadedPaths = JSON.parse(localStorage.getItem("savedPaths") || "[]");
+    setSavedPaths(loadedPaths);
   }, []);
 
-  // Save paths to localStorage whenever savedPaths changes
-  useEffect(() => {
-    localStorage.setItem("savedPaths", JSON.stringify(savedPaths));
-  }, [savedPaths]);
-
-  const handleDeletePath = (pathToDelete) => {
-    const updatedPaths = savedPaths.filter(
-      (item) => item.path !== pathToDelete
-    );
-    setSavedPaths(updatedPaths);
+  const handleSavePath = () => {
+    if (folderPath && folderTitle) {
+      const newPath = { title: folderTitle, path: folderPath };
+      const updatedPaths = [...savedPaths, newPath];
+      setSavedPaths(updatedPaths);
+      localStorage.setItem("savedPaths", JSON.stringify(updatedPaths));
+      setFolderPath("");
+      setFolderTitle("");
+      Swal.fire("Success", "Path saved successfully!", "success");
+    } else {
+      Swal.fire("Error", "Please enter both a title and a path.", "error");
+    }
   };
 
-  const handleGetFolderContents = async (pathToOpen) => {
-    const path = pathToOpen || folderPath;
-    if (path) {
-      try {
-        const data = { folderPath: path };
-        console.log("Data yang akan dikirim:", JSON.stringify(data, null, 2));
-
-        const response = await axios.post(
-          "http://localhost:3001/folder-contents",
-          data
+  const handleDeletePath = (pathToDelete) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const updatedPaths = savedPaths.filter(
+          (item) => item.path !== pathToDelete
         );
-        console.log("Response dari server:", response.data);
-        setFolderContents(response.data.files);
+        setSavedPaths(updatedPaths);
         Swal.fire(
-          "Success",
-          "Folder contents retrieved successfully!",
-          "success"
+          'Deleted!',
+          'Your folder has been deleted.',
+          'success'
         );
-      } catch (error) {
-        console.error("Error getting folder contents:", error);
-        if (error.response) {
-          Swal.fire("Error", `Error: ${error.response.data.error}`, "error");
-        } else {
-          Swal.fire("Error", `Error: ${error.message}`, "error");
-        }
       }
-    } else {
-      Swal.fire("Warning", "please fill in the path.", "warning");
+    });
+  };  
+
+  const handleGetFolderContents = async (pathToCheck) => {
+    const path = pathToCheck || folderPath;
+    try {
+      const response = await axios.post("http://localhost:3001/folder-contents", {
+        folderPath: path,
+      });
+      setFolderContents(response.data.files);
+      setIsViewingContents(true);
+      setCurrentPath(path);
+    } catch (error) {
+      console.error("Error fetching folder contents:", error);
+      Swal.fire("Error", "Failed to fetch folder contents.", "error");
     }
   };
 
   const handleOpenFile = async (fileName) => {
-    const filePath = `${folderPath}/${fileName}`;
+    const filePath = `${currentPath}/${fileName}`;
     try {
-      const data = { filePath };
-      console.log("Data yang akan dikirim:", JSON.stringify(data, null, 2));
-
-      const response = await axios.post(
-        "http://localhost:3001/open-file",
-        data
-      );
+      console.log("Data yang akan dikirim:", JSON.stringify({ filePath }, null, 2));
+      const response = await axios.post("http://localhost:3001/open-file", { filePath });
       console.log("Response dari server:", response.data);
       Swal.fire("Success", response.data.message, "success");
     } catch (error) {
@@ -78,6 +85,12 @@ function LinktoFolder() {
       }
     }
   };
+   const handleBack = () => {
+    setIsViewingContents(false);
+    setFolderContents([]);
+    setCurrentPath("");
+  };
+
 
   return (
     <div className="p-6 mt-8 bg-gray-800 rounded-lg shadow-lg">
@@ -100,6 +113,12 @@ function LinktoFolder() {
           placeholder="Title"
         />
         <button
+          onClick={handleSavePath}
+          className="px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg"
+        >
+          Save
+        </button>
+        <button
           onClick={() => handleGetFolderContents()}
           className="px-4 py-2 text-white transition-colors bg-green-500 rounded-lg shadow-md hover:bg-green-600 hover:shadow-lg"
         >
@@ -109,8 +128,8 @@ function LinktoFolder() {
 
       {savedPaths.length > 0 && (
         <div className="p-4 mt-4 bg-gray-700 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-300">Your path:</h3>
-          <div className="flex flex-col space-y-2">
+          <h3 className="text-lg font-semibold text-gray-300">Your paths:</h3>
+          <div className="flex flex-wrap gap-4">
             {savedPaths.map((item, index) => (
               <div
                 key={index}
@@ -118,35 +137,51 @@ function LinktoFolder() {
               >
                 <button
                   className="text-blue-300 transition-colors duration-200 cursor-pointer hover:underline"
-                  onClick={() => handleOpenFolder(item.path)}
-                >
-                  {item.title || item.path}{" "}
-                  {/* Tampilkan judul atau path jika judul tidak ada */}
-                </button>
-                <button
-                  className="ml-2 text-red-500 hover:text-red-700"
-                  onClick={() => handleDeletePath(item.path)}
-                >
-                  Delete
-                </button>
-                <button
-                  className="ml-2 text-green-500 hover:text-green-700"
                   onClick={() => handleGetFolderContents(item.path)}
                 >
-                  View Contents
+                  {item.title || item.path}
                 </button>
+                
+                <div className="flex items-center">
+                
+                
+                  <button
+                    className="ml-2 text-purple-500 hover:text-purple-700"
+                    onClick={() => handleGetFolderInfo(item.path)}
+                  >
+                    <Info size={16} />
+                  </button>
+                  <button
+                    className="ml-2 text-green-500 hover:text-green-700"
+                    onClick={() => handleGetFolderContents(item.path)}
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button
+                    className="ml-2 text-red-500 hover:text-red-700"
+                    onClick={() => handleDeletePath(item.path)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {folderContents.length > 0 && (
+      {isViewingContents && (
         <div className="p-4 mt-4 bg-gray-700 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-300">
-            Folder Contents:
-          </h3>
-          <ul className="text-gray-300 list-disc list-inside">
+          <button
+            onClick={handleBack}
+            className="flex items-center px-4 py-2 mb-4 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Back
+          </button>
+          <h3 className="mb-2 text-lg font-semibold text-gray-300">Folder Contents:</h3>
+          <p className="mb-2 text-sm text-gray-400">Current Path: {currentPath}</p>
+          <ul className="grid grid-cols-1 gap-4 text-gray-300 list-disc list-inside sm:grid-cols-2 md:grid-cols-3">
             {folderContents.map((file, index) => (
               <li
                 key={index}

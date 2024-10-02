@@ -31,6 +31,10 @@ import Audit1 from "./Content/isa/Audit1/Audit1.jsx";
 import Audit2 from "./Content/isa/Audit2/Audit2.jsx";
 
 import Pc from "./Content/pc/Pc.jsx";
+import ThinClient from "./Content/pc/thinclient.jsx";
+import Printer from "./Content/pc/printer.jsx";
+
+
 import Dc from "./Content/dc/Dc.jsx";
 import Telnet from "./Content/telnet/Telnet.jsx";
 import Cab from "./Content/cab/Cab.jsx";
@@ -79,6 +83,10 @@ createRoot(document.getElementById("root")).render(
       {/* End Of Route ISA */}
 
       <Route path="/pc" element={<Pc />} />
+      <Route path="/thinclient" element={<ThinClient />} />
+      <Route path="/printer" element={<Printer />} />
+
+
       <Route path="/dc" element={<Dc />} />
       <Route path="/telnet" element={<Telnet />} />
       <Route path="/cab" element={<Cab />} />

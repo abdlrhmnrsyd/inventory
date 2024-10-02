@@ -55,7 +55,7 @@ const LandingPage = () => {
         variants={typingAnimation}
         key={userName}
       >
-        Welcome, {userName} !
+        Welcome, {userName}!
       </motion.h1>
       
       <motion.p 

@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
 const { exec } = require('child_process'); 
 const fs = require('fs');
+const path = require('path');
 
 
 const app = express();
@@ -561,6 +562,191 @@ app.post('/open-file', (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// New endpoint to get folder info
+app.post('/folder-info', (req, res) => {
+  const { folderPath } = req.body;
+  
+  if (!folderPath) {
+    return res.status(400).json({ error: 'Folder path is required.' });
+  }
+  
+  try {
+    const parsedPath = path.parse(folderPath);
+    const info = {
+      root: parsedPath.root,
+      dir: parsedPath.dir,
+      base: parsedPath.base,
+      ext: parsedPath.ext,
+      name: parsedPath.name,
+      isAbsolute: path.isAbsolute(folderPath),
+      normalized: path.normalize(folderPath),
+    };
+
+    res.json(info);
+  } catch (error) {
+    console.error('Error getting folder info:', error);
+    res.status(500).json({ error: 'Failed to get folder information.' });
+  }
 });
+
+
+
+app.post("/vendor-repair", async (req, res) => {
+  const {
+    repair_date,
+    ticket_number,
+    ageing,
+    engineer_name,
+    username,
+    bu_name,
+    material_name,
+    brand,
+    type,
+    serial_number,
+    cost_center,
+    pr_number,
+    po_number,
+    quotation_date,
+    cost_without,
+    status,
+    vendor_delivery,
+    date,
+    created_by_ses,
+    remarks,
+  } = req.body;
+
+  console.log("Received data:", req.body); // Logging received data
+
+  try {
+    const newVendorRepair = await pool.query(
+      "INSERT INTO vendor_repair (repair_date, ticket_number, ageing, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery, date, created_by_ses, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8 ,$9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING *",
+      [
+        repair_date,
+        ticket_number,
+        ageing,
+        engineer_name,
+        username,
+        bu_name,
+        material_name,
+        brand,
+        type,
+        serial_number,
+        cost_center,
+        pr_number,
+        po_number,
+        quotation_date,
+        cost_without,
+        status,
+        vendor_delivery,
+        date,
+        created_by_ses,
+        remarks,
+      ]
+    );
+
+    res.json(newVendorRepair.rows[0]);
+  } catch (err) {
+    console.error("Error inserting data:", err.message); // Logging error message
+    res.status(500).json({ message: "Server error", error: err.message }); // Improved error response
+  }
+});
+
+
+//crud vendor repair
+app.get("/vendor-repair", async (req, res) => {
+  try {
+    const allVendorRepair = await pool.query("SELECT * FROM vendor_repair");
+    res.json(allVendorRepair.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+app.put("/vendor-repair/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    repair_date,
+    ticket_number,
+    ageing,
+    engineer_name,
+    username,
+    bu_name,
+    material_name,
+    brand,
+    type,
+    serial_number,
+    cost_center,
+    pr_number,
+    po_number,
+    quotation_date,
+    cost_without,
+    status,
+    vendor_delivery,
+    date,
+    created_by_ses,
+    remarks, // Perbaiki typo dari 'remaks' menjadi 'remarks'
+  } = req.body;
+
+  try {
+    const updateVendorRepair = await pool.query(
+      "UPDATE vendor_repair SET repair_date = $1, ticket_number = $2, ageing = $3, engineer_name = $4, username = $5, bu_name = $6, material_name = $7, brand = $8, type = $9, serial_number = $10, cost_center = $11, pr_number = $12, po_number = $13, quotation_date = $14, cost_without = $15, status = $16, vendor_delivery = $17, date = $18, created_by_ses = $19, remarks = $20 WHERE id = $21 RETURNING *",
+      [
+        repair_date,
+        ticket_number,
+        ageing,
+        engineer_name,
+        username,
+        bu_name,
+        material_name,
+        brand,
+        type,
+        serial_number,
+        cost_center,
+        pr_number,
+        po_number,
+        quotation_date,
+        cost_without,
+        status,
+        vendor_delivery,
+        date,
+        created_by_ses,
+        remarks, // Perbaiki typo dari 'remaks' menjadi 'remarks'
+        id,
+      ]
+    );
+
+    if (updateVendorRepair.rows.length === 0) {
+      return res.status(404).send("Vendor repair not found");
+    }
+
+    res.json(updateVendorRepair.rows[0]);
+  } catch (err) {
+    console.error("Error updating data:", err.message); // Tambahkan logging untuk kesalahan
+    res.status(500).send("Server error");
+  }
+});
+
+app.delete("/vendor-repair/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleteVendorRepair  = await pool.query(
+      "DELETE FROM vendor_repair WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (deleteVendorRepair.rows.length === 0) {
+      return res.status(404).send("not found");
+    }
+
+    res.json({ message: "deleted successfully" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+
+      app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+      });
