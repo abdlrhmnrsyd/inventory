@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { Trash2, Eye, Info, ArrowLeft } from "lucide-react";
+import { Trash2, Eye, Info, ArrowLeft, Folder, Home } from "lucide-react"; // Import Home icon
 
 function LinktoFolder() {
   const [folderPath, setFolderPath] = useState("");
   const [savedPaths, setSavedPaths] = useState([]);
-  const [folderContents, setFolderContents] = useState([]);
+  const [folderContents, setFolderContents] = useState({ files: [], folders: [] });
   const [isViewingContents, setIsViewingContents] = useState(false);
   const [folderTitle, setFolderTitle] = useState("");
   const [currentPath, setCurrentPath] = useState("");
+  const [pathHistory, setPathHistory] = useState([]); // New state to track path history
 
   useEffect(() => {
     const loadedPaths = JSON.parse(localStorage.getItem("savedPaths") || "[]");
@@ -60,8 +61,12 @@ function LinktoFolder() {
       const response = await axios.post("http://localhost:3001/folder-contents", {
         folderPath: path,
       });
-      setFolderContents(response.data.files);
+      const { files, folders } = response.data;
+      setFolderContents({ files, folders });
       setIsViewingContents(true);
+      if (currentPath) {
+        setPathHistory((prevHistory) => [...prevHistory, currentPath]); // Update path history
+      }
       setCurrentPath(path);
     } catch (error) {
       console.error("Error fetching folder contents:", error);
@@ -85,12 +90,27 @@ function LinktoFolder() {
       }
     }
   };
-   const handleBack = () => {
-    setIsViewingContents(false);
-    setFolderContents([]);
-    setCurrentPath("");
+
+  const handleBack = () => {
+    if (pathHistory.length > 0) {
+      const previousPath = pathHistory[pathHistory.length - 1];
+      setPathHistory((prevHistory) => prevHistory.slice(0, -1));
+      setCurrentPath(previousPath);
+      setFolderContents({ files: [], folders: [] }); // Clear current contents
+      handleGetFolderContents(previousPath);
+    } else {
+      setIsViewingContents(false);
+      setFolderContents({ files: [], folders: [] });
+      setCurrentPath("");
+    }
   };
 
+  const handleReturnToSavedPaths = () => {
+    setIsViewingContents(false);
+    setFolderContents({ files: [], folders: [] });
+    setCurrentPath("");
+    setPathHistory([]);
+  };
 
   return (
     <div className="p-6 mt-8 bg-gray-800 rounded-lg shadow-lg">
@@ -127,71 +147,91 @@ function LinktoFolder() {
       </div>
 
       {savedPaths.length > 0 && (
-        <div className="p-4 mt-4 bg-gray-700 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-300">Your paths:</h3>
-          <div className="flex flex-wrap gap-4">
-            {savedPaths.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-2 transition-colors bg-gray-600 rounded-lg hover:bg-gray-500"
-              >
-                <button
-                  className="text-blue-300 transition-colors duration-200 cursor-pointer hover:underline"
-                  onClick={() => handleGetFolderContents(item.path)}
-                >
-                  {item.title || item.path}
-                </button>
-                
-                <div className="flex items-center">
-                
-                
-                  <button
-                    className="ml-2 text-purple-500 hover:text-purple-700"
-                    onClick={() => handleGetFolderInfo(item.path)}
-                  >
-                    <Info size={16} />
-                  </button>
-                  <button
-                    className="ml-2 text-green-500 hover:text-green-700"
-                    onClick={() => handleGetFolderContents(item.path)}
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    className="ml-2 text-red-500 hover:text-red-700"
-                    onClick={() => handleDeletePath(item.path)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
+  <div className="p-6 mt-4 bg-gray-700 rounded-lg"> {/* Increased padding */}
+    <h3 className="text-xl font-semibold text-gray-300">Your paths:</h3> {/* Increased font size */}
+    <div className="flex flex-wrap gap-6"> {/* Increased gap */}
+      {savedPaths.map((item, index) => (
+        <div
+          key={index}
+          className="flex flex-col items-start justify-between p-4 transition-colors bg-gray-600 rounded-lg hover:bg-gray-500"
+        >
+          <button
+            className="text-lg text-blue-300 transition-colors duration-200 cursor-pointer hover:underline" 
+            onClick={() => handleGetFolderContents(item.path)}
+          >
+            {item.title || item.path}
+          </button>
+          
+          <div className="flex mt-2 space-x-4"> {/* Adjusted position */}
+            <button
+              className="text-green-500 hover:text-green-700"
+              onClick={() => handleGetFolderContents(item.path)}
+            >
+              <Eye size={20} /> {/* Increased icon size */}
+            </button>
+            <button
+              className="text-red-500 hover:text-red-700"
+              onClick={() => handleDeletePath(item.path)}
+            >
+              <Trash2 size={20} /> {/* Increased icon size */}
+            </button>
           </div>
         </div>
-      )}
-
+      ))}
+    </div>
+  </div>
+)}
       {isViewingContents && (
-        <div className="p-4 mt-4 bg-gray-700 rounded-lg">
-          <button
-            onClick={handleBack}
-            className="flex items-center px-4 py-2 mb-4 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Back
-          </button>
+        <div className="p-4 mt-4 bg-gray-700 rounded-lg" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div className="flex mb-4 space-x-4">
+            <button
+              onClick={handleBack}
+              className="flex items-center px-4 py-2 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
+            >
+              <ArrowLeft size={16} className="mr-2" />
+              Back
+            </button>
+            <button
+              onClick={handleReturnToSavedPaths}
+              className="flex items-center px-4 py-2 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
+            >
+              <Home size={16} className="mr-2" />
+              Return to Saved Paths
+            </button>
+          </div>
           <h3 className="mb-2 text-lg font-semibold text-gray-300">Folder Contents:</h3>
           <p className="mb-2 text-sm text-gray-400">Current Path: {currentPath}</p>
-          <ul className="grid grid-cols-1 gap-4 text-gray-300 list-disc list-inside sm:grid-cols-2 md:grid-cols-3">
-            {folderContents.map((file, index) => (
-              <li
-                key={index}
-                className="cursor-pointer hover:underline"
-                onClick={() => handleOpenFile(file)}
-              >
-                {file}
-              </li>
-            ))}
-          </ul>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div>
+              <h4 className="font-semibold text-gray-300 text-md">Folders:</h4>
+              <ul className="text-gray-300 list-disc list-inside">
+                {folderContents.folders.map((folder, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center cursor-pointer hover:underline"
+                    onClick={() => handleGetFolderContents(`${currentPath}/${folder}`)}
+                  >
+                    <Folder size={16} className="mr-2" />
+                    {folder}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-300 text-md">Files:</h4>
+              <ul className="text-gray-300 list-disc list-inside">
+                {folderContents.files.map((file, index) => (
+                  <li
+                    key={index}
+                    className="cursor-pointer hover:underline"
+                    onClick={() => handleOpenFile(file)}
+                  >
+                    {file}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       )}
     </div>

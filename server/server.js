@@ -524,12 +524,16 @@ app.post('/pc/import', async (req, res) => {
 app.post('/folder-contents', (req, res) => {
   const { folderPath } = req.body;
 
-  fs.readdir(folderPath, (err, files) => {
+  fs.readdir(folderPath, { withFileTypes: true }, (err, files) => {
     if (err) {
       console.error(`Error reading folder: ${err.message}`);
       return res.status(500).json({ error: 'Gagal membaca isi folder.' });
     }
-    res.json({ files });
+
+    const folders = files.filter(file => file.isDirectory()).map(file => file.name);
+    const regularFiles = files.filter(file => file.isFile()).map(file => file.name);
+
+    res.json({ folders, files: regularFiles });
   });
 });
 
