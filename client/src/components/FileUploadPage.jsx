@@ -1,12 +1,24 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { saveAs } from 'file-saver'; // Import file-saver
 
 function FileUploadPage() {
   const [file, setFile] = useState(null);
   const [fileType, setFileType] = useState(null);
   const [fileName, setFileName] = useState("");
-  const [folderPath, setFolderPath] = useState(""); // Path folder lokal
+  const [savedFileName, setSavedFileName] = useState(""); // State for saved file name
+  const [savedFileUrl, setSavedFileUrl] = useState(""); // State for saved file URL
+  const [showSaveForm, setShowSaveForm] = useState(false); // State to show save form
 
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    // Load saved file data from Local Storage
+    const savedFileData = JSON.parse(localStorage.getItem('savedFileData'));
+    if (savedFileData) {
+      setSavedFileName(savedFileData.name);
+      setSavedFileUrl(savedFileData.url);
+    }
+  }, []);
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
@@ -18,8 +30,8 @@ function FileUploadPage() {
   };
 
   const handleOpenFile = () => {
-    if (file) {
-      window.open(file); // Open file in new tab
+    if (savedFileUrl) {
+      window.open(savedFileUrl); // Open saved file in new tab
     } else {
       alert("Please select a file first.");
     }
@@ -38,10 +50,33 @@ function FileUploadPage() {
     }
   };
 
+  const handleSaveFile = () => {
+    if (file) {
+      setShowSaveForm(true); // Show the save form
+    } else {
+      alert("Tidak ada file untuk disimpan.");
+    }
+  };
+
+  const handleSaveFileName = (e) => {
+    e.preventDefault();
+    saveAs(file, savedFileName); // Use file-saver to save the file with the new name
+    setSavedFileUrl(file); // Save the file URL
+    setShowSaveForm(false); // Hide the save form
+    setFile(null); // Hide the file preview
+    setFileType(null);
+    setFileName("");
+    fileInputRef.current.value = ""; // Reset the file input
+
+    // Save file data to Local Storage
+    localStorage.setItem('savedFileData', JSON.stringify({ name: savedFileName, url: file }));
+  };
+
   const handleCloseFile = () => {
     setFile(null);
     setFileType(null);
     setFileName("");
+    setSavedFileName(""); // Reset saved file name
     fileInputRef.current.value = ""; // Reset the file input
   };
 
@@ -59,7 +94,7 @@ function FileUploadPage() {
         />
       </div>
 
-      {file && (
+      {file && !showSaveForm && (
         <div className="relative p-6 mt-8 bg-gray-700 rounded-lg shadow-lg">
           <button
             onClick={handleCloseFile}
@@ -93,7 +128,35 @@ function FileUploadPage() {
             >
               Download File
             </button>
+            <button
+              onClick={handleSaveFile} // Add save button
+              className="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600"
+            >
+              Save File
+            </button>
           </div>
+        </div>
+      )}
+
+      {showSaveForm && (
+        <form onSubmit={handleSaveFileName} className="mt-4">
+          <label className="block mb-2 text-lg font-medium text-gray-300" htmlFor="save_file_name">Enter file name:</label>
+          <input
+            type="text"
+            id="save_file_name"
+            className="w-full p-2 mb-4 text-gray-900 bg-gray-200 rounded-lg"
+            value={savedFileName}
+            onChange={(e) => setSavedFileName(e.target.value)}
+            required
+          />
+          <button type="submit" className="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">Save</button>
+        </form>
+      )}
+
+      {savedFileName && !file && (
+        <div className="mt-8">
+          <h2 className="mb-4 text-2xl font-semibold text-blue-300">Saved Files:</h2>
+          <p className="text-lg text-blue-400 cursor-pointer" onClick={handleOpenFile}>{savedFileName}</p>
         </div>
       )}
     </div>

@@ -642,6 +642,7 @@ const MicrosoftComponent = () => {
                         <option value="PT. Riau Andalan Pulp and Paper">
                           PT. Riau Andalan Pulp and Paper
                         </option>
+                        v
                         <option value="PT. Riau Andalan Kertas">
                           PT. Riau Andalan Kertas
                         </option>
@@ -942,7 +943,7 @@ const MicrosoftComponent = () => {
           >
             <div style={{ width: "3000px" }}>
               <Table style={{ minWidth: "3000px" }}>
-              <TableHeader>
+                <TableHeader>
                   {showCheckboxes && (
                     <TableCell className="text-center">
                       <input
@@ -977,15 +978,15 @@ const MicrosoftComponent = () => {
                   );
                   return (
                     <TableRow key={microsoft.id}>
-                    {showCheckboxes && (
-                      <TableCell className="text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedRows.includes(microsoft.id)}
-                          onChange={() => handleSelectRow(microsoft.id)}
-                        />
-                      </TableCell>
-                    )}
+                      {showCheckboxes && (
+                        <TableCell className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedRows.includes(microsoft.id)}
+                            onChange={() => handleSelectRow(microsoft.id)}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="text-center">{index + 1}</TableCell>
                       <TableCell className="text-center">
                         {microsoft.company_name}
@@ -1070,20 +1071,20 @@ const MicrosoftComponent = () => {
               </Table>
             </div>
           </div>
-        <div className="flex items-center justify-center mt-2">
-              <button
-                onClick={scrollLeft} // Attach scrollLeft function
-                className="px-4 py-2 mr-2 text-white bg-gray-300 rounded-md hover:bg-gray-600" // Added margin-right
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={scrollRight} // Attach scrollRight function
-                className="px-4 py-2 text-white bg-gray-300 rounded-md hover:bg-gray-600"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
+          <div className="flex items-center justify-center mt-2">
+            <button
+              onClick={scrollLeft} // Attach scrollLeft function
+              className="px-4 py-2 mr-2 text-white bg-gray-300 rounded-md hover:bg-gray-600" // Added margin-right
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={scrollRight} // Attach scrollRight function
+              className="px-4 py-2 text-white bg-gray-300 rounded-md hover:bg-gray-600"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </>

@@ -46,6 +46,12 @@ function LinktoFolder() {
           (item) => item.path !== pathToDelete
         );
         setSavedPaths(updatedPaths);
+        if (currentPath === pathToDelete) {
+          setIsViewingContents(false);
+          setFolderContents({ files: [], folders: [] });
+          setCurrentPath("");
+          setPathHistory([]);
+        }
         Swal.fire(
           'Deleted!',
           'Your folder has been deleted.',
@@ -53,7 +59,7 @@ function LinktoFolder() {
         );
       }
     });
-  };  
+  };
 
   const handleGetFolderContents = async (pathToCheck) => {
     const path = pathToCheck || folderPath;
@@ -92,19 +98,23 @@ function LinktoFolder() {
   };
 
   const handleBack = () => {
-    if (pathHistory.length > 0) {
-      const previousPath = pathHistory[pathHistory.length - 1];
-      setPathHistory((prevHistory) => prevHistory.slice(0, -1));
-      setCurrentPath(previousPath);
-      setFolderContents({ files: [], folders: [] }); // Clear current contents
-      handleGetFolderContents(previousPath);
+    if (currentPath) {
+      const pathSegments = currentPath.split('/');
+      if (pathSegments.length > 1) {
+        const newPath = pathSegments.slice(0, -1).join('/');
+        setCurrentPath(newPath);
+        handleGetFolderContents(newPath);
+      } else {
+        setIsViewingContents(false);
+        setFolderContents({ files: [], folders: [] });
+        setCurrentPath("");
+      }
     } else {
       setIsViewingContents(false);
       setFolderContents({ files: [], folders: [] });
       setCurrentPath("");
     }
   };
-
   const handleReturnToSavedPaths = () => {
     setIsViewingContents(false);
     setFolderContents({ files: [], folders: [] });
@@ -182,58 +192,58 @@ function LinktoFolder() {
   </div>
 )}
       {isViewingContents && (
-        <div className="p-4 mt-4 bg-gray-700 rounded-lg" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-          <div className="flex mb-4 space-x-4">
-            <button
-              onClick={handleBack}
-              className="flex items-center px-4 py-2 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
+  <div className="p-4 mt-4 bg-gray-700 rounded-lg" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+    <div className="flex mb-4 space-x-4">
+      <button
+        onClick={handleBack}
+        className="flex items-center px-4 py-2 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
+      >
+        <ArrowLeft size={16} className="mr-2" />
+        Back
+      </button>
+      <button
+        onClick={handleReturnToSavedPaths}
+        className="flex items-center px-4 py-2 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
+      >
+        <Home size={16} className="mr-2" />
+        Return to Saved Paths
+      </button>
+    </div>
+    <h3 className="mb-2 text-lg font-semibold text-gray-300">Folder Contents:</h3>
+    <p className="mb-2 text-sm text-gray-400">Current Path: {currentPath}</p>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+      <div>
+        <h4 className="font-semibold text-gray-300 text-md">Folders:</h4>
+        <ul className="text-gray-300 list-disc list-inside">
+          {folderContents.folders.map((folder, index) => (
+            <li
+              key={index}
+              className="flex items-center cursor-pointer hover:underline"
+              onClick={() => handleGetFolderContents(`${currentPath}/${folder}`)}
             >
-              <ArrowLeft size={16} className="mr-2" />
-              Back
-            </button>
-            <button
-              onClick={handleReturnToSavedPaths}
-              className="flex items-center px-4 py-2 text-white transition-colors bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:shadow-lg"
+              <Folder size={16} className="mr-2" />
+              {folder}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-semibold text-gray-300 text-md">Files:</h4>
+        <ul className="text-gray-300 list-disc list-inside">
+          {folderContents.files.map((file, index) => (
+            <li
+              key={index}
+              className="cursor-pointer hover:underline"
+              onClick={() => handleOpenFile(file)}
             >
-              <Home size={16} className="mr-2" />
-              Return to Saved Paths
-            </button>
-          </div>
-          <h3 className="mb-2 text-lg font-semibold text-gray-300">Folder Contents:</h3>
-          <p className="mb-2 text-sm text-gray-400">Current Path: {currentPath}</p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            <div>
-              <h4 className="font-semibold text-gray-300 text-md">Folders:</h4>
-              <ul className="text-gray-300 list-disc list-inside">
-                {folderContents.folders.map((folder, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center cursor-pointer hover:underline"
-                    onClick={() => handleGetFolderContents(`${currentPath}/${folder}`)}
-                  >
-                    <Folder size={16} className="mr-2" />
-                    {folder}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-300 text-md">Files:</h4>
-              <ul className="text-gray-300 list-disc list-inside">
-                {folderContents.files.map((file, index) => (
-                  <li
-                    key={index}
-                    className="cursor-pointer hover:underline"
-                    onClick={() => handleOpenFile(file)}
-                  >
-                    {file}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
+              {file}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

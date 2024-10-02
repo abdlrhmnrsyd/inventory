@@ -267,6 +267,27 @@ const PcComponent = () => {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+      // Check for duplicate IP addresses and MAC addresses in the imported data
+      const importedIPs = jsonData.map((item) => item.ip_address);
+      const existingIPs = pcs.map((item) => item.ip_address);
+      const duplicateIPs = importedIPs.filter((ip) => existingIPs.includes(ip));
+
+      const importedMACs = jsonData.map((item) => item.mac_address);
+      const existingMACs = pcs.map((item) => item.mac_address);
+      const duplicateMACs = importedMACs.filter((mac) => existingMACs.includes(mac));
+
+      if (duplicateIPs.length > 0 || duplicateMACs.length > 0) {
+        let errorMessage = "Duplicate values found:";
+        if (duplicateIPs.length > 0) {
+          errorMessage += `\nIP Addresses: ${duplicateIPs.join(", ")}`;
+        }
+        if (duplicateMACs.length > 0) {
+          errorMessage += `\nMAC Addresses: ${duplicateMACs.join(", ")}`;
+        }
+        showAlert(errorMessage, "error");
+        return;
+      }
+
       try {
         await axios.post("http://localhost:3001/pc/import", jsonData);
         showAlert("Data imported successfully!", "success");

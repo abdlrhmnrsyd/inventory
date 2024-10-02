@@ -150,10 +150,9 @@ const VendorRepairComponent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (isTicketNumberDuplicate) {
-      showAlert(
-        "Ticket Number already exists. Please enter a unique Ticket Number."
-      );
+    const isDuplicateTicketNumber = ticket_number.some((pc) => vendorRepair.ticket_number === form.ticket_number);
+    if (isDuplicateTicketNumber) {
+      showAlert("already exists. Please enter a unique IP address.");
       return;
     }
 
@@ -289,6 +288,21 @@ const VendorRepairComponent = () => {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      // Check for duplicate ticket numbers in the imported data
+      const importedTicketNumbers = jsonData.map((item) => item.ticket_number);
+      const existingTicketNumbers = vendorRepair.map((item) => item.ticket_number);
+      const duplicateTicketNumbers = importedTicketNumbers.filter((ticketNumber) =>
+        existingTicketNumbers.includes(ticketNumber)
+      );
+
+      if (duplicateTicketNumbers.length > 0) {
+        showAlert(
+          `Duplicate Ticket Numbers found: ${duplicateTicketNumbers.join(", ")}. Please ensure all Ticket Numbers are unique.`,
+          "error"
+        );
+        return;
+      }
 
       try {
         await axios.post(
@@ -654,6 +668,7 @@ const VendorRepairComponent = () => {
                           value={form.repair_date}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -666,6 +681,7 @@ const VendorRepairComponent = () => {
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
                         />
+                        {error && <p className="text-red-500">{error}</p>}
                       </div>
                       <div className="col-span-1">
                         <label htmlFor="ageing">Ageing</label>
@@ -676,6 +692,7 @@ const VendorRepairComponent = () => {
                           value={form.ageing}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -687,6 +704,7 @@ const VendorRepairComponent = () => {
                           value={form.engineer_name}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -698,6 +716,7 @@ const VendorRepairComponent = () => {
                           value={form.username}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -709,6 +728,7 @@ const VendorRepairComponent = () => {
                           value={form.bu_name}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -720,6 +740,7 @@ const VendorRepairComponent = () => {
                           value={form.material_name}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -731,6 +752,7 @@ const VendorRepairComponent = () => {
                           value={form.brand}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -742,6 +764,7 @@ const VendorRepairComponent = () => {
                           value={form.type}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -753,6 +776,7 @@ const VendorRepairComponent = () => {
                           value={form.serial_number}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -764,6 +788,7 @@ const VendorRepairComponent = () => {
                           value={form.cost_center}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -775,6 +800,7 @@ const VendorRepairComponent = () => {
                           value={form.pr_number}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -786,6 +812,7 @@ const VendorRepairComponent = () => {
                           value={form.po_number}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -797,6 +824,7 @@ const VendorRepairComponent = () => {
                           value={form.quotation_date}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -808,6 +836,7 @@ const VendorRepairComponent = () => {
                           value={form.cost_without}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -818,6 +847,7 @@ const VendorRepairComponent = () => {
                           value={form.status}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         >
                           <option>Select Status</option>
                           <option value="Repair">Repair</option>
@@ -834,6 +864,7 @@ const VendorRepairComponent = () => {
                           value={form.vendor_delivery}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -845,6 +876,7 @@ const VendorRepairComponent = () => {
                           value={form.date}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -856,6 +888,7 @@ const VendorRepairComponent = () => {
                           value={form.created_by_ses}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
@@ -867,6 +900,7 @@ const VendorRepairComponent = () => {
                           value={form.remarks}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="flex justify-end col-span-3 mt-4 space-x-4">
