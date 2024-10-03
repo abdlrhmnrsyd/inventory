@@ -139,19 +139,20 @@ const PcComponent = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    const handleSubmit = async (e) => {
+      e.preventDefault();
 
     // Check for duplicate IP address
-    const isDuplicateIP = pcs.some((pc) => pc.ip_address === form.ip_address);
+    const isDuplicateIP = pcs.some((pc) => pc.ip_address === form.ip_address && pc.id !== form.id);
     if (isDuplicateIP) {
       showAlert("IP address already exists. Please enter a unique IP address.");
       return;
     }
 
+   
     // Check for duplicate IP address
     const isDuplicateMAC = pcs.some(
-      (pc) => pc.mac_address === form.mac_address
+      (pc) => pc.mac_address === form.mac_address && pc.id !== form.id
     );
     if (isDuplicateMAC) {
       showAlert(

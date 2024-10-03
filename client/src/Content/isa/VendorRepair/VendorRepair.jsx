@@ -149,10 +149,13 @@ const VendorRepairComponent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const isDuplicateTicketNumber = ticket_number.some((pc) => vendorRepair.ticket_number === form.ticket_number);
+  
+    const isDuplicateTicketNumber = vendorRepair.some(
+      (repair) => repair.ticket_number === form.ticket_number && repair.id !== form.id
+    );
+  
     if (isDuplicateTicketNumber) {
-      showAlert("already exists. Please enter a unique IP address.");
+      showAlert("Ticket Number already exists. Please enter a unique Ticket Number.");
       return;
     }
 

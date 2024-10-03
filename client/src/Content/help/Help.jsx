@@ -4,6 +4,8 @@ import { Info, Database, Monitor, Server, Network, Briefcase, FolderTree, BookOp
 import Sidebar, { SidebarItem } from "../../components/Sidebar";
 import Navbar from "../../components/Navbar"; // Import Navbar
 import ProfileCard from '../../components/ProfileCard';
+import LinktoFolder from '../../components/LinktoFolder';
+
 
 function HelpComponent() {
   return (
@@ -54,11 +56,7 @@ function HelpComponent() {
         </Sidebar>
         
         <div className="flex-1 p-6 main-content">
-          <Navbar /> 
-          <div className="content">
-            <h1 className="text-3xl font-bold">Welcome to the Home Page</h1>
-            <p className="mt-4">This is your main content area.</p>
-          </div>
+          <LinktoFolder />
         </div>
       </div>
     </>

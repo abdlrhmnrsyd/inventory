@@ -5,12 +5,13 @@ import { Trash2, Eye, Info, ArrowLeft, Folder, Home } from "lucide-react"; // Im
 
 function LinktoFolder() {
   const [folderPath, setFolderPath] = useState("");
+  const [folderTitle, setFolderTitle] = useState("");
   const [savedPaths, setSavedPaths] = useState([]);
   const [folderContents, setFolderContents] = useState({ files: [], folders: [] });
   const [isViewingContents, setIsViewingContents] = useState(false);
-  const [folderTitle, setFolderTitle] = useState("");
   const [currentPath, setCurrentPath] = useState("");
   const [pathHistory, setPathHistory] = useState([]); // New state to track path history
+  const [isFormVisible, setIsFormVisible] = useState(false); // New state to control form visibility
 
   useEffect(() => {
     const loadedPaths = JSON.parse(localStorage.getItem("savedPaths") || "[]");
@@ -127,34 +128,42 @@ function LinktoFolder() {
       <h2 className="mb-4 text-2xl font-semibold text-blue-400">
         Link to Folder
       </h2>
-      <div className="flex flex-col space-y-4">
-        <input
-          type="text"
-          value={folderPath}
-          onChange={(e) => setFolderPath(e.target.value)}
-          className="input input-bordered w-full max-w-lg bg-[#2F4F4F] text-gray-200 border-[#47bcbc] hover:border-[#3A6363] focus:border-[#3A6363] transition-colors p-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter path"
-        />
-        <input
-          type="text"
-          value={folderTitle}
-          onChange={(e) => setFolderTitle(e.target.value)}
-          className="input input-bordered w-full max-w-lg bg-[#2F4F4F] text-gray-200 border-[#47bcbc] hover:border-[#3A6363] focus:border-[#3A6363] transition-colors p-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Title"
-        />
-        <button
-          onClick={handleSavePath}
-          className="px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg"
-        >
-          Save
-        </button>
-        <button
-          onClick={() => handleGetFolderContents()}
-          className="px-4 py-2 text-white transition-colors bg-green-500 rounded-lg shadow-md hover:bg-green-600 hover:shadow-lg"
-        >
-          Get Folder Contents
-        </button>
-      </div>
+      <button
+        onClick={() => setIsFormVisible(!isFormVisible)}
+        className="px-4 py-2 mb-4 text-white transition-colors bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg"
+      >
+        {isFormVisible ? "Hide Add Path Form" : "Add Path"}
+      </button>
+      {isFormVisible && (
+        <div className="flex flex-col space-y-4">
+          <input
+            type="text"
+            value={folderPath}
+            onChange={(e) => setFolderPath(e.target.value)}
+            className="input input-bordered w-full max-w-lg bg-[#2F4F4F] text-gray-200 border-[#47bcbc] hover:border-[#3A6363] focus:border-[#3A6363] transition-colors p-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter path"
+          />
+          <input
+            type="text"
+            value={folderTitle}
+            onChange={(e) => setFolderTitle(e.target.value)}
+            className="input input-bordered w-full max-w-lg bg-[#2F4F4F] text-gray-200 border-[#47bcbc] hover:border-[#3A6363] focus:border-[#3A6363] transition-colors p-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Title"
+          />
+          <button
+            onClick={handleSavePath}
+            className="px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => handleGetFolderContents()}
+            className="px-4 py-2 text-white transition-colors bg-green-500 rounded-lg shadow-md hover:bg-green-600 hover:shadow-lg"
+          >
+            Get Folder Contents
+          </button>
+        </div>
+      )}
 
       {savedPaths.length > 0 && (
   <div className="p-6 mt-4 bg-gray-700 rounded-lg"> {/* Increased padding */}
