@@ -33,6 +33,7 @@ import Audit2 from "./Content/isa/Audit2/Audit2.jsx";
 import Pc from "./Content/pc/Pc.jsx";
 import ThinClient from "./Content/pc/thinclient.jsx";
 import Printer from "./Content/pc/printer.jsx";
+import Monitor from "./Content/pc/monitor.jsx";
 
 
 import Dc from "./Content/dc/Dc.jsx";
@@ -85,6 +86,7 @@ createRoot(document.getElementById("root")).render(
       <Route path="/pc" element={<Pc />} />
       <Route path="/thinclient" element={<ThinClient />} />
       <Route path="/printer" element={<Printer />} />
+      <Route path="/monitor" element={<Monitor />} />
 
 
       <Route path="/dc" element={<Dc />} />

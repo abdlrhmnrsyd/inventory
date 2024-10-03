@@ -838,6 +838,16 @@ app.post('/save-folder-path', async (req, res) => {
   }
 
   try {
+    // Check if the folder path already exists
+    const existingPath = await pool.query(
+      "SELECT * FROM folder_paths WHERE folder_path = $1",
+      [folderPath]
+    );
+
+    if (existingPath.rows.length > 0) {
+      return res.status(400).json({ message: "This path is already saved." });
+    }
+
     const result = await pool.query(
       "INSERT INTO folder_paths (folder_path, title, created_at) VALUES ($1, $2, NOW()) RETURNING *",
       [folderPath, title]

@@ -30,7 +30,7 @@ import * as XLSX from "xlsx"; // Import XLSX library
 import Navbar from "../../components/Navbar";
 import NavbarItem from "../../components/NavbarItem";
 
-const ThinClientComponent = () => {
+const MonitorComponent = () => {
   return (
     <>
     <div className="flex">
@@ -96,11 +96,11 @@ const ThinClientComponent = () => {
 <Navbar>
           <Link to ="/pc"><NavbarItem>PC</NavbarItem></Link>
           <Link to ="/printer"><NavbarItem >Printer</NavbarItem></Link>
-          <Link to ="/thinclient"><NavbarItem active={true}>ThinClient</NavbarItem></Link>
-          <Link to ="/monitor"><NavbarItem >Monitor</NavbarItem></Link>
+          <Link to ="/thinclient"><NavbarItem>ThinClient</NavbarItem></Link>
+          <Link to ="/monitor"><NavbarItem  active={true}>Monitor</NavbarItem></Link>
         </Navbar>
         <div>
-              <h1>thinclient</h1>
+              <h1>monitor</h1>
           </div>
 </div>
       {/* <div className="flex-1 p-6 overflow-x-auto">
@@ -521,9 +521,10 @@ const ThinClientComponent = () => {
           </button>
         </div>
       </div> */}
+      
     </div>
   </>
   );
 };
 
-export default ThinClientComponent;
+export default MonitorComponent;

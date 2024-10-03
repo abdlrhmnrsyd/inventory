@@ -139,17 +139,18 @@ const PcComponent = () => {
     }
   };
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
     // Check for duplicate IP address
-    const isDuplicateIP = pcs.some((pc) => pc.ip_address === form.ip_address && pc.id !== form.id);
+    const isDuplicateIP = pcs.some(
+      (pc) => pc.ip_address === form.ip_address && pc.id !== form.id
+    );
     if (isDuplicateIP) {
       showAlert("IP address already exists. Please enter a unique IP address.");
       return;
     }
 
-   
     // Check for duplicate IP address
     const isDuplicateMAC = pcs.some(
       (pc) => pc.mac_address === form.mac_address && pc.id !== form.id
@@ -275,7 +276,9 @@ const PcComponent = () => {
 
       const importedMACs = jsonData.map((item) => item.mac_address);
       const existingMACs = pcs.map((item) => item.mac_address);
-      const duplicateMACs = importedMACs.filter((mac) => existingMACs.includes(mac));
+      const duplicateMACs = importedMACs.filter((mac) =>
+        existingMACs.includes(mac)
+      );
 
       if (duplicateIPs.length > 0 || duplicateMACs.length > 0) {
         let errorMessage = "Duplicate values found:";
@@ -411,7 +414,6 @@ const PcComponent = () => {
 
           <Link to="/pc">
             <SidebarItem icon={<Monitor size={20} />} text="PC" active>
-            
               <Link to="/pc/thinclient">
                 <SidebarItem text="Thin Client" />
               </Link>
@@ -472,6 +474,9 @@ const PcComponent = () => {
             </Link>
             <Link to="/thinclient">
               <NavbarItem>ThinClient</NavbarItem>
+            </Link>
+            <Link to="/monitor">
+              <NavbarItem>Monitor</NavbarItem>
             </Link>
           </Navbar>
           <div>

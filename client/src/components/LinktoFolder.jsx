@@ -42,12 +42,17 @@ function LinktoFolder() {
         Swal.fire("Success", "Path saved successfully!", "success");
       } catch (error) {
         console.error("Error saving folder path:", error);
-        Swal.fire("Error", "Failed to save folder path.", "error");
+        if (error.response && error.response.status === 400) {
+          Swal.fire("Error", error.response.data.message, "error");
+        } else {
+          Swal.fire("Error", "Failed to save folder path.", "error");
+        }
       }
     } else {
       Swal.fire("Error", "Please enter both a title and a path.", "error");
     }
   };
+  
 
   const handleDeletePath = async (pathToDelete, id) => {
     Swal.fire({
