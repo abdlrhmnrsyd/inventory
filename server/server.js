@@ -829,6 +829,52 @@ app.post('/vendor-repair/import', async (req, res) => {
   }
 });
 
+// Endpoint to save folder path
+app.post('/save-folder-path', async (req, res) => {
+  const { folderPath, title } = req.body;
+
+  if (!folderPath || !title) {
+    return res.status(400).json({ message: "Folder path and title are required." });
+  }
+
+  try {
+    const result = await pool.query(
+      "INSERT INTO folder_paths (folder_path, title, created_at) VALUES ($1, $2, NOW()) RETURNING *",
+      [folderPath, title]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error saving folder path:", err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+// Endpoint to get all saved folder paths
+app.get('/folder-paths', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM folder_paths ORDER BY created_at DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching folder paths:", err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+// Endpoint to delete a saved folder path
+app.delete('/folder-paths/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query("DELETE FROM folder_paths WHERE id = $1 RETURNING *", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Folder path not found." });
+    }
+    res.json({ message: "Folder path deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting folder path:", err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
 
       app.listen(port, () => {
         console.log(`Server running on port ${port}`);
