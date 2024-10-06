@@ -825,7 +825,7 @@ app.post('/vendor-repair/import', async (req, res) => {
     res.json({ message: 'Data imported successfully' });
   } catch (error) {
     console.error('Server error:', error);
-    res.status(500).json({ error: 'An error occurred while importing data', details: error.message, stack: error.stack });
+    res.status(500).json({ error: 'An error importing data', details: error.message, stack: error.stack });
   }
 });
 
