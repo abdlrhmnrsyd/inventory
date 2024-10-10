@@ -13,6 +13,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Search,
 } from "lucide-react"; // Added Chevron imports
 import Sidebar, { SidebarItem } from "../../components/Sidebar";
 import { Link, useNavigate } from "react-router-dom";
@@ -205,11 +206,11 @@ function ServerComponent() {
       setSelectAll(false); // Reset Select All when hiding checkboxes
     }
   };
-  const handleSelectAll = () => {
+const handleSelectAll = () => {
     if (selectAll) {
       setSelectedRows([]); // Deselect all rows
     } else {
-      setSelectedRows(serverFiltered.map((server) => server.id)); // Select all rows
+      setSelectedRows(filteredServers.map((server) => server.id)); // Select all rows
     }
     setSelectAll(!selectAll); // Toggle Select All state
   };
@@ -221,6 +222,7 @@ function ServerComponent() {
         : [...prevSelectedRows, id]
     );
   };
+
 
   // Function to handle deletion of selected rows
   const handleDeleteSelectedRows = async () => {
@@ -344,6 +346,23 @@ function ServerComponent() {
     return `${day}/${month}/${year}`;
   };
 
+  const [searchFieldTerm, setSearchFieldTerm] = useState(""); // State for search field term
+
+  const handleFieldSearch = (e) => {
+    setSearchFieldTerm(e.target.value);
+    const field = document.getElementById(e.target.value);
+    if (field) {
+      field.scrollIntoView({ behavior: "smooth", block: "center" });
+      field.focus();
+    }
+  };
+
+  const [isSearchInputVisible, setIsSearchInputVisible] = useState(false); // State to manage search input visibility
+
+  const toggleSearchInput = () => {
+    setIsSearchInputVisible(!isSearchInputVisible); // Toggle search input visibility
+  };
+  
   return (
     <>
       <div className="flex">
@@ -942,7 +961,26 @@ function ServerComponent() {
               Add New Server
             </h2>
             <div className="overflow-y-auto h-96">
+              {/* Search input for form fields */}
+              <div className="flex items-center mb-4">
+                <button
+                  onClick={toggleSearchInput}
+                  className="p-2 text-white bg-blue-500 rounded-md hover:bg-blue-700"
+                >
+                  <Search size={20} />
+                </button>
+                {isSearchInputVisible && (
+                  <input
+                    type="text"
+                    placeholder="Search field..."
+                    className="px-3 py-2 ml-2 border border-gray-300 rounded-md"
+                    value={searchFieldTerm}
+                    onChange={handleFieldSearch}
+                  />
+                )}
+              </div>
               <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-4">
+                {/* ... existing form fields ... */}
                 <div>
                   <label
                     htmlFor="rack"
