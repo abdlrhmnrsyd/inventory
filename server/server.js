@@ -4,10 +4,9 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
-const { exec } = require('child_process'); 
-const fs = require('fs');
-const path = require('path');
-
+const { exec } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const port = 3001;
@@ -15,8 +14,8 @@ const port = 3001;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // PostgreSQL Pool
 const pool = new Pool({
@@ -78,7 +77,7 @@ app.get("/profile", async (req, res) => {
     res.json(userResult.rows[0]);
   } catch (err) {
     console.error("Error fetching profile:", err);
-    res.status(500).json({ message: "Server error." });
+    res.status(500).json({ message: "Server error.", details: err.message });
   }
 });
 
@@ -288,6 +287,185 @@ app.delete("/pc/:id", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+// CRUD Endpoints for telnet
+app.post("/telnet", async (req, res) => {
+  const {
+    area,
+    role,
+    ip_address,
+    hostname,
+    brand,
+    device_type,
+    serial_number,
+    source_date,
+  } = req.body;
+
+  try {
+    const newTelnet = await pool.query(
+      "INSERT INTO telnet (area, role, ip_address, hostname, brand, device_type, serial_number, source_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+      [
+        area,
+        role,
+        ip_address,
+        hostname,
+        brand,
+        device_type,
+        serial_number,
+        source_date,
+      ]
+    );
+
+    res.json(newTelnet.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// Moved outside of app.post
+app.get("/telnet", async (req, res) => {
+  try {
+    const allTelnetEntries = await pool.query("SELECT * FROM telnet");
+    res.json(allTelnetEntries.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+app.put("/telnet/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    area,
+    role,
+    ip_address,
+    hostname,
+    brand,
+    device_type,
+    serial_number,
+    source_date,
+  } = req.body;
+
+  try {
+    const updateTelnet = await pool.query(
+      "UPDATE telnet SET area = $1, role = $2, ip_address = $3, hostname = $4, brand = $5, device_type = $6, serial_number = $7, source_date = $8 WHERE id = $9 RETURNING *",
+      [
+        area,
+        role,
+        ip_address,
+        hostname,
+        brand,
+        device_type,
+        serial_number,
+        source_date,
+        id,
+      ]
+    );
+
+    if (updateTelnet.rows.length === 0) {
+      return res.status(404).send("Telnet entry not found");
+    }
+
+    res.json(updateTelnet.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// Moved outside of app.put
+app.delete("/telnet/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleteTelnet = await pool.query(
+      "DELETE FROM telnet WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (deleteTelnet.rows.length === 0) {
+      return res.status(404).send("Telnet entry not found");
+    }
+
+    res.json({ message: "Telnet entry deleted successfully" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// Import Excel telnet
+app.post("/telnet/import", async (req, res) => {
+  console.log("Received data:", JSON.stringify(req.body, null, 2));
+  try {
+    const data = req.body;
+    const ip_address = new Set();
+    const duplicates = [];
+
+    for (const item of data) {
+      console.log("Processing item:", JSON.stringify(item, null, 2));
+      try {
+        // Convert dates to DD/MM/YYYY format
+        item.source_date = convertExcelDate(item.source_date);
+
+        // Check for duplicates in the current batch
+        if (ip_address.has(item.ip_address)) {
+          duplicates.push(item);
+          continue;
+        }
+
+        // Check for duplicates in the database
+        const duplicateCheck = await pool.query(
+          "SELECT * FROM telnet WHERE ip_address = $1",
+          [item.ip_address]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+          duplicates.push(item);
+          continue;
+        }
+
+        // Add to sets to track duplicates in the current batch
+        ip_address.add(item.ip_address);
+
+        // Insert into the 'telnet' table
+        await pool.query(
+          "INSERT INTO telnet (area, role, ip_address, hostname, brand, device_type, serial_number, source_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+          [
+            item.area,
+            item.role,
+            item.ip_address,
+            item.hostname,
+            item.brand,
+            item.device_type,
+            item.serial_number,
+            item.source_date,
+          ]
+        );
+      } catch (itemError) {
+        console.error(
+          "Error processing item:",
+          JSON.stringify(item, null, 2),
+          itemError
+        );
+      }
+    }
+
+    if (duplicates.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "Duplicate data found", duplicates });
+    }
+
+    res.json({ message: "Data imported successfully" });
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).json({
+      error: "An error occurred while importing data",
+      details: error.message,
+      stack: error.stack,
+    });
+  }
+});
 
 // CRUD Endpoints for Microsoft
 app.post("/microsoft", async (req, res) => {
@@ -422,39 +600,63 @@ app.delete("/microsoft/:id", async (req, res) => {
 
 function convertExcelDate(excelDate) {
   const date = new Date((excelDate - (25567 + 2)) * 86400 * 1000);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
 }
 
-app.post('/microsoft/import', async (req, res) => {
-  console.log('Received data:', JSON.stringify(req.body, null, 2));
+app.post("/microsoft/import", async (req, res) => {
+  console.log("Received data:", JSON.stringify(req.body, null, 2));
   try {
     const data = req.body;
     for (const item of data) {
-      console.log('Processing item:', JSON.stringify(item, null, 2));
+      console.log("Processing item:", JSON.stringify(item, null, 2));
       try {
         item.effective_date = convertExcelDate(item.effective_date);
         item.expired_date = convertExcelDate(item.expired_date);
         await pool.query(
-          'INSERT INTO microsoft (company_name, department, user_name, account, products_name, sku_number, version, type_license, contact_number, qty, effective_date, expired_date, po, vendor_name, email_vendor) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)',
-          [item.company_name, item.department, item.user_name, item.account, item.products_name, item.sku_number, item.version, item.type_license, item.contact_number, item.qty, item.effective_date, item.expired_date, item.po, item.vendor_name, item.email_vendor,]
+          "INSERT INTO microsoft (company_name, department, user_name, account, products_name, sku_number, version, type_license, contact_number, qty, effective_date, expired_date, po, vendor_name, email_vendor) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)",
+          [
+            item.company_name,
+            item.department,
+            item.user_name,
+            item.account,
+            item.products_name,
+            item.sku_number,
+            item.version,
+            item.type_license,
+            item.contact_number,
+            item.qty,
+            item.effective_date,
+            item.expired_date,
+            item.po,
+            item.vendor_name,
+            item.email_vendor,
+          ]
         );
       } catch (itemError) {
-        console.error('Error processing item:', JSON.stringify(item, null, 2), itemError);
+        console.error(
+          "Error processing item:",
+          JSON.stringify(item, null, 2),
+          itemError
+        );
         // Continue to next item instead of throwing
       }
     }
-    res.json({ message: 'Data imported successfully' });
+    res.json({ message: "Data imported successfully" });
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ error: 'An error occurred while importing data', details: error.message, stack: error.stack });
+    console.error("Server error:", error);
+    res.status(500).json({
+      error: "An error occurred while importing data",
+      details: error.message,
+      stack: error.stack,
+    });
   }
 });
 
-app.post('/pc/import', async (req, res) => {
-  console.log('Received data:', JSON.stringify(req.body, null, 2));
+app.post("/pc/import", async (req, res) => {
+  console.log("Received data:", JSON.stringify(req.body, null, 2));
   try {
     const data = req.body;
     const ipAddresses = new Set();
@@ -462,19 +664,22 @@ app.post('/pc/import', async (req, res) => {
     const duplicates = [];
 
     for (const item of data) {
-      console.log('Processing item:', JSON.stringify(item, null, 2));
+      console.log("Processing item:", JSON.stringify(item, null, 2));
       try {
         item.status = item.status.toUpperCase(); // Convert status to uppercase
 
         // Check for duplicates in the current batch
-        if (ipAddresses.has(item.ip_address) || macAddresses.has(item.mac_address)) {
+        if (
+          ipAddresses.has(item.ip_address) ||
+          macAddresses.has(item.mac_address)
+        ) {
           duplicates.push(item);
           continue;
         }
 
         // Check for duplicates in the database
         const duplicateCheck = await pool.query(
-          'SELECT * FROM pc WHERE ip_address = $1 OR mac_address = $2',
+          "SELECT * FROM pc WHERE ip_address = $1 OR mac_address = $2",
           [item.ip_address, item.mac_address]
         );
 
@@ -488,7 +693,7 @@ app.post('/pc/import', async (req, res) => {
         macAddresses.add(item.mac_address);
 
         await pool.query(
-          'INSERT INTO pc (it_code, brand, serial_number, ip_address, mac_address, host_name, location, business_unit, department, username, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+          "INSERT INTO pc (it_code, brand, serial_number, ip_address, mac_address, host_name, location, business_unit, department, username, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
           [
             item.it_code,
             item.brand,
@@ -500,44 +705,57 @@ app.post('/pc/import', async (req, res) => {
             item.business_unit,
             item.department,
             item.username,
-            item.status
+            item.status,
           ]
         );
       } catch (itemError) {
-        console.error('Error processing item:', JSON.stringify(item, null, 2), itemError);
+        console.error(
+          "Error processing item:",
+          JSON.stringify(item, null, 2),
+          itemError
+        );
       }
     }
 
     if (duplicates.length > 0) {
-      return res.status(400).json({ message: 'Duplicate data found', duplicates });
+      return res
+        .status(400)
+        .json({ message: "Duplicate data found", duplicates });
     }
 
-    res.json({ message: 'Data imported successfully' });
+    res.json({ message: "Data imported successfully" });
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ error: 'An error occurred while importing data', details: error.message, stack: error.stack });
+    console.error("Server error:", error);
+    res.status(500).json({
+      error: "An error occurred while importing data",
+      details: error.message,
+      stack: error.stack,
+    });
   }
 });
 
-
 // Endpoint to get folder contents
-app.post('/folder-contents', (req, res) => {
+app.post("/folder-contents", (req, res) => {
   const { folderPath } = req.body;
 
   fs.readdir(folderPath, { withFileTypes: true }, (err, files) => {
     if (err) {
       console.error(`Error reading folder: ${err.message}`);
-      return res.status(500).json({ error: 'Gagal membaca isi folder.' });
+      return res.status(500).json({ error: "Gagal membaca isi folder." });
     }
 
-    const folders = files.filter(file => file.isDirectory()).map(file => file.name);
-    const regularFiles = files.filter(file => file.isFile()).map(file => file.name);
+    const folders = files
+      .filter((file) => file.isDirectory())
+      .map((file) => file.name);
+    const regularFiles = files
+      .filter((file) => file.isFile())
+      .map((file) => file.name);
 
     res.json({ folders, files: regularFiles });
   });
 });
 
-app.post('/open-file', (req, res) => {
+app.post("/open-file", (req, res) => {
   const { filePath } = req.body;
 
   // Logika untuk membuka file
@@ -546,36 +764,36 @@ app.post('/open-file', (req, res) => {
   // Perintah untuk membuka file sesuai OS
   let command;
   switch (process.platform) {
-    case 'win32':
+    case "win32":
       command = `start "" "${filePath}"`; // Windows
       break;
-    case 'darwin':
+    case "darwin":
       command = `open "${filePath}"`; // macOS
       break;
-    case 'linux':
+    case "linux":
       command = `xdg-open "${filePath}"`; // Linux
       break;
     default:
-      return res.status(400).json({ error: 'Platform tidak didukung.' });
+      return res.status(400).json({ error: "Platform tidak didukung." });
   }
 
   exec(command, (error) => {
     if (error) {
       console.error(`Error membuka file: ${error.message}`);
-      return res.status(500).json({ error: 'Gagal membuka file.' });
+      return res.status(500).json({ error: "Gagal membuka file." });
     }
     res.json({ message: `File ${filePath} berhasil dibuka!` });
   });
 });
 
 // New endpoint to get folder info
-app.post('/folder-info', (req, res) => {
+app.post("/folder-info", (req, res) => {
   const { folderPath } = req.body;
-  
+
   if (!folderPath) {
-    return res.status(400).json({ error: 'Folder path is required.' });
+    return res.status(400).json({ error: "Folder path is required." });
   }
-  
+
   try {
     const parsedPath = path.parse(folderPath);
     const info = {
@@ -590,73 +808,471 @@ app.post('/folder-info', (req, res) => {
 
     res.json(info);
   } catch (error) {
-    console.error('Error getting folder info:', error);
-    res.status(500).json({ error: 'Failed to get folder information.' });
+    console.error("Error getting folder info:", error);
+    res.status(500).json({ error: "Failed to get folder information." });
   }
 });
 
-
-
-app.post("/vendor-repair", async (req, res) => {
+app.post("/server", async (req, res) => {
+  console.log("Received data:", req.body);
   const {
-    repair_date,
-    ticket_number,
-    ageing,
-    engineer_name,
-    username,
-    bu_name,
-    material_name,
-    brand,
+    rack,
+    seq,
     type,
-    serial_number,
-    cost_center,
-    pr_number,
-    po_number,
-    quotation_date,
-    cost_without,
-    status,
-    vendor_delivery,
-    date,
-    created_by_ses,
+    active,
+    asset_category,
+    asset_number,
+    asset_tag_number,
+    site,
+    location,
+    user, // atau "user_name" jika lebih spesifik
+    job_title,
+    bu,
+    domain,
+    deposit_cyberark,
+    server_ownership,
+    application_owner,
+    system_owner,
+    business_unit,
+    add_in_solarwinds,
+    server_role,
+    brand,
+    mac_address,
+    host_name,
+    ip_address,
+    ilo,
+    model,
+    serial_no,
+    physical_virtual,
+    power_supply_model,
+    eosl_date,
+    planned_refresh_date,
+    eosl_status,
+    cip,
+    date_purchased,
+    power_supply_model_description,
+    power_consumption,
+    btu_hour,
+    po_renewal_maintenance_contract,
+    po_purchase_material,
+    cost_local_currency,
+    indicate_which_currency,
+    cost_usd,
+    utilization_storage,
+    criticality_rating,
+    dr_enable,
+    warranty_start_date,
+    end_date,
+    date_disposed,
+    core_each_processor,
+    number_of_physical_processor,
+    total_core,
+    cpu,
+    ram,
+    hard_disk,
+    part_number_harddisk,
+    usb_disabled,
+    cd_dvd,
+    os_version,
     remarks,
+    ms_office_version,
+    druva,
+    ip_guard,
+    fde,
   } = req.body;
 
   console.log("Received data:", req.body); // Logging received data
 
   try {
-    const newVendorRepair = await pool.query(
-      "INSERT INTO vendor_repair (repair_date, ticket_number, ageing, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery, date, created_by_ses, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8 ,$9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING *",
+    const newServer = await pool.query(
+      `INSERT INTO server (
+    rack,
+    seq,
+    type,
+    active,
+    asset_category,
+    asset_number,
+    asset_tag_number,
+    site,
+    location,
+    "user",
+    job_title,
+    bu,
+    domain,
+    deposit_cyberark,
+    server_ownership,
+    application_owner,
+    system_owner,
+    business_unit,
+    add_in_solarwinds,
+    server_role,
+    brand,
+    mac_address,
+    host_name,
+    ip_address,
+    ilo,
+    model,
+    serial_no,
+    physical_virtual,
+    power_supply_model,
+    eosl_date,
+    planned_refresh_date,
+    eosl_status,
+    cip,
+    date_purchased,
+    power_supply_model_description,
+    power_consumption,
+    btu_hour,
+    po_renewal_maintenance_contract,
+    po_purchase_material,
+    cost_local_currency,
+    indicate_which_currency,
+    cost_usd,
+    utilization_storage,
+    criticality_rating,
+    dr_enable,
+    warranty_start_date,
+    end_date,
+    date_disposed,
+    core_each_processor,
+    number_of_physical_processor,
+    total_core,
+    cpu,
+    ram,
+    hard_disk,
+    part_number_harddisk,
+    usb_disabled,
+    cd_dvd,
+    os_version,
+    remarks,
+    ms_office_version,
+    druva,
+    ip_guard,
+    fde
+  ) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, 
+    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, 
+    $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, 
+    $57, $58, $59, $60, $61, $62, $63
+  ) RETURNING *`,
       [
-        repair_date,
-        ticket_number,
-        ageing,
-        engineer_name,
-        username,
-        bu_name,
-        material_name,
-        brand,
+        rack,
+        seq,
         type,
-        serial_number,
-        cost_center,
-        pr_number,
-        po_number,
-        quotation_date,
-        cost_without,
-        status,
-        vendor_delivery,
-        date,
-        created_by_ses,
+        active,
+        asset_category,
+        asset_number,
+        asset_tag_number,
+        site,
+        location,
+        user, // gunakan tanda kutip ganda "user" karena 'user' adalah kata kunci PostgreSQL
+        job_title,
+        bu,
+        domain,
+        deposit_cyberark,
+        server_ownership,
+        application_owner,
+        system_owner,
+        business_unit,
+        add_in_solarwinds,
+        server_role,
+        brand,
+        mac_address,
+        host_name,
+        ip_address,
+        ilo,
+        model,
+        serial_no,
+        physical_virtual,
+        power_supply_model,
+        eosl_date,
+        planned_refresh_date,
+        eosl_status,
+        cip,
+        date_purchased,
+        power_supply_model_description,
+        power_consumption,
+        btu_hour,
+        po_renewal_maintenance_contract,
+        po_purchase_material,
+        cost_local_currency,
+        indicate_which_currency,
+        cost_usd,
+        utilization_storage,
+        criticality_rating,
+        dr_enable,
+        warranty_start_date,
+        end_date,
+        date_disposed,
+        core_each_processor,
+        number_of_physical_processor,
+        total_core,
+        cpu,
+        ram,
+        hard_disk,
+        part_number_harddisk,
+        usb_disabled,
+        cd_dvd,
+        os_version,
         remarks,
+        ms_office_version,
+        druva,
+        ip_guard,
+        fde,
       ]
     );
 
-    res.json(newVendorRepair.rows[0]);
+    res.json(newServer.rows[0]);
   } catch (err) {
     console.error("Error inserting data:", err.message); // Logging error message
     res.status(500).json({ message: "Server error", error: err.message }); // Improved error response
   }
 });
 
+//crud server
+app.get("/server", async (req, res) => {
+  try {
+    const allServer = await pool.query("SELECT * FROM server");
+    res.json(allServer.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+app.put("/server/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    rack,
+    seq,
+    type,
+    active,
+    asset_category,
+    asset_number,
+    asset_tag_number,
+    site,
+    location,
+    user, // atau "user_name" jika lebih spesifik
+    job_title,
+    bu,
+    domain,
+    deposit_cyberark,
+    server_ownership,
+    application_owner,
+    system_owner,
+    business_unit,
+    add_in_solarwinds,
+    server_role,
+    brand,
+    mac_address,
+    host_name,
+    ip_address,
+    ilo,
+    model,
+    serial_no,
+    physical_virtual,
+    power_supply_model,
+    eosl_date,
+    planned_refresh_date,
+    eosl_status,
+    cip,
+    date_purchased,
+    power_supply_model_description,
+    power_consumption,
+    btu_hour,
+    po_renewal_maintenance_contract,
+    po_purchase_material,
+    cost_local_currency,
+    indicate_which_currency,
+    cost_usd,
+    utilization_storage,
+    criticality_rating,
+    dr_enable,
+    warranty_start_date,
+    end_date,
+    date_disposed,
+    core_each_processor,
+    number_of_physical_processor,
+    total_core,
+    cpu,
+    ram,
+    hard_disk,
+    part_number_harddisk,
+    usb_disabled,
+    cd_dvd,
+    os_version,
+    remarks,
+    ms_office_version,
+    druva,
+    ip_guard,
+    fde,
+  } = req.body;
+
+  try {
+    const updateServer = await pool.query(
+      `UPDATE server 
+   SET 
+     rack = $1, 
+     seq = $2, 
+     type = $3, 
+     active = $4, 
+     asset_category = $5, 
+     asset_number = $6, 
+     asset_tag_number = $7, 
+     site = $8, 
+     location = $9, 
+     "user" = $10,
+     job_title = $11, 
+     bu = $12, 
+     domain = $13, 
+     deposit_cyberark = $14, 
+     server_ownership = $15, 
+     application_owner = $16, 
+     system_owner = $17, 
+     business_unit = $18, 
+     add_in_solarwinds = $19, 
+     server_role = $20, 
+     brand = $21, 
+     mac_address = $22, 
+     host_name = $23, 
+     ip_address = $24, 
+     ilo = $25, 
+     model = $26, 
+     serial_no = $27, 
+     physical_virtual = $28, 
+     power_supply_model = $29, 
+     eosl_date = $30, 
+     planned_refresh_date = $31, 
+     eosl_status = $32, 
+     cip = $33, 
+     date_purchased = $34, 
+     power_supply_model_description = $35, 
+     power_consumption = $36, 
+     btu_hour = $37, 
+     po_renewal_maintenance_contract = $38, 
+     po_purchase_material = $39, 
+     cost_local_currency = $40, 
+     indicate_which_currency = $41, 
+     cost_usd = $42, 
+     utilization_storage = $43, 
+     criticality_rating = $44, 
+     dr_enable = $45, 
+     warranty_start_date = $46, 
+     end_date = $47, 
+     date_disposed = $48, 
+     core_each_processor = $49, 
+     number_of_physical_processor = $50, 
+     total_core = $51, 
+     cpu = $52, 
+     ram = $53, 
+     hard_disk = $54, 
+     part_number_harddisk = $55, 
+     usb_disabled = $56, 
+     cd_dvd = $57, 
+     os_version = $58, 
+     remarks = $59, 
+     ms_office_version = $60, 
+     druva = $61, 
+     ip_guard = $62, 
+     fde = $63 
+   WHERE id = $64 RETURNING *`,
+      [
+        rack,
+        seq,
+        type,
+        active,
+        asset_category,
+        asset_number,
+        asset_tag_number,
+        site,
+        location,
+        user, // gunakan tanda kutip ganda "user" karena 'user' adalah kata kunci PostgreSQL
+        job_title,
+        bu,
+        domain,
+        deposit_cyberark,
+        server_ownership,
+        application_owner,
+        system_owner,
+        business_unit,
+        add_in_solarwinds,
+        server_role,
+        brand,
+        mac_address,
+        host_name,
+        ip_address,
+        ilo,
+        model,
+        serial_no,
+        physical_virtual,
+        power_supply_model,
+        eosl_date,
+        planned_refresh_date,
+        eosl_status,
+        cip,
+        date_purchased,
+        power_supply_model_description,
+        power_consumption,
+        btu_hour,
+        po_renewal_maintenance_contract,
+        po_purchase_material,
+        cost_local_currency,
+        indicate_which_currency,
+        cost_usd,
+        utilization_storage,
+        criticality_rating,
+        dr_enable,
+        warranty_start_date,
+        end_date,
+        date_disposed,
+        core_each_processor,
+        number_of_physical_processor,
+        total_core,
+        cpu,
+        ram,
+        hard_disk,
+        part_number_harddisk,
+        usb_disabled,
+        cd_dvd,
+        os_version,
+        remarks,
+        ms_office_version,
+        druva,
+        ip_guard,
+        fde,
+        id, // ID dari server yang ingin diupdate
+      ]
+    );
+
+    if (updateServer.rows.length === 0) {
+      return res.status(404).send("Server repair not found");
+    }
+
+    res.json(updateServer.rows[0]);
+  } catch (err) {
+    console.error("Error updating data:", err.message); // Tambahkan logging untuk kesalahan
+    res.status(500).send("Server error");
+  }
+});
+
+app.delete("/server/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleteServer = await pool.query(
+      "DELETE FROM server WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (deleteServer.rows.length === 0) {
+      return res.status(404).send("not found");
+    }
+
+    res.json({ message: "deleted successfully" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
 
 //crud vendor repair
 app.get("/vendor-repair", async (req, res) => {
@@ -736,7 +1352,7 @@ app.put("/vendor-repair/:id", async (req, res) => {
 app.delete("/vendor-repair/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const deleteVendorRepair  = await pool.query(
+    const deleteVendorRepair = await pool.query(
       "DELETE FROM vendor_repair WHERE id = $1 RETURNING *",
       [id]
     );
@@ -752,16 +1368,15 @@ app.delete("/vendor-repair/:id", async (req, res) => {
   }
 });
 
-
-app.post('/vendor-repair/import', async (req, res) => {
-  console.log('Received data:', JSON.stringify(req.body, null, 2));
+app.post("/vendor-repair/import", async (req, res) => {
+  console.log("Received data:", JSON.stringify(req.body, null, 2));
   try {
     const data = req.body;
     const ticketNumbers = new Set();
     const duplicates = [];
 
     for (const item of data) {
-      console.log('Processing item:', JSON.stringify(item, null, 2));
+      console.log("Processing item:", JSON.stringify(item, null, 2));
       try {
         // Convert dates to DD/MM/YYYY format
         item.repair_date = convertExcelDate(item.repair_date);
@@ -776,7 +1391,7 @@ app.post('/vendor-repair/import', async (req, res) => {
 
         // Check for duplicates in the database
         const duplicateCheck = await pool.query(
-          'SELECT * FROM vendor_repair WHERE ticket_number = $1',
+          "SELECT * FROM vendor_repair WHERE ticket_number = $1",
           [item.ticket_number]
         );
 
@@ -789,7 +1404,7 @@ app.post('/vendor-repair/import', async (req, res) => {
         ticketNumbers.add(item.ticket_number);
 
         await pool.query(
-          'INSERT INTO vendor_repair (repair_date, ticket_number, ageing, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery, date, created_by_ses, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)',
+          "INSERT INTO vendor_repair (repair_date, ticket_number, ageing, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery, date, created_by_ses, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)",
           [
             item.repair_date,
             item.ticket_number,
@@ -814,27 +1429,39 @@ app.post('/vendor-repair/import', async (req, res) => {
           ]
         );
       } catch (itemError) {
-        console.error('Error processing item:', JSON.stringify(item, null, 2), itemError);
+        console.error(
+          "Error processing item:",
+          JSON.stringify(item, null, 2),
+          itemError
+        );
       }
     }
 
     if (duplicates.length > 0) {
-      return res.status(400).json({ message: 'Duplicate data found', duplicates });
+      return res
+        .status(400)
+        .json({ message: "Duplicate data found", duplicates });
     }
 
-    res.json({ message: 'Data imported successfully' });
+    res.json({ message: "Data imported successfully" });
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ error: 'An error importing data', details: error.message, stack: error.stack });
+    console.error("Server error:", error);
+    res.status(500).json({
+      error: "An error importing data",
+      details: error.message,
+      stack: error.stack,
+    });
   }
 });
 
 // Endpoint to save folder path
-app.post('/save-folder-path', async (req, res) => {
+app.post("/save-folder-path", async (req, res) => {
   const { folderPath, title } = req.body;
 
   if (!folderPath || !title) {
-    return res.status(400).json({ message: "Folder path and title are required." });
+    return res
+      .status(400)
+      .json({ message: "Folder path and title are required." });
   }
 
   try {
@@ -860,9 +1487,11 @@ app.post('/save-folder-path', async (req, res) => {
 });
 
 // Endpoint to get all saved folder paths
-app.get('/folder-paths', async (req, res) => {
+app.get("/folder-paths", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM folder_paths ORDER BY created_at DESC");
+    const result = await pool.query(
+      "SELECT * FROM folder_paths ORDER BY created_at DESC"
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching folder paths:", err);
@@ -871,10 +1500,13 @@ app.get('/folder-paths', async (req, res) => {
 });
 
 // Endpoint to delete a saved folder path
-app.delete('/folder-paths/:id', async (req, res) => {
+app.delete("/folder-paths/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query("DELETE FROM folder_paths WHERE id = $1 RETURNING *", [id]);
+    const result = await pool.query(
+      "DELETE FROM folder_paths WHERE id = $1 RETURNING *",
+      [id]
+    );
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Folder path not found." });
     }
@@ -885,7 +1517,6 @@ app.delete('/folder-paths/:id', async (req, res) => {
   }
 });
 
-
-      app.listen(port, () => {
-        console.log(`Server running on port ${port}`);
-      });
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});

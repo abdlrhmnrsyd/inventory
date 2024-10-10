@@ -29,79 +29,65 @@ import Swal from "sweetalert2"; // Import SweetAlert
 import * as XLSX from "xlsx"; // Import XLSX library
 import Navbar from "../../components/Navbar";
 import NavbarItem from "../../components/NavbarItem";
-
 const MonitorComponent = () => {
   return (
     <>
     <div className="flex">
-      <Sidebar>
-        <Link to="/budget">
-          <SidebarItem icon={<Database size={20} />} text="ISA" />
-        </Link>
+    <Sidebar>
+          <Link to="/budget">
+            <SidebarItem icon={<Database size={20} />} text="ISA"/>
+          </Link>
 
-        <Link to="/pc">
-          <SidebarItem icon={<Monitor size={20} />} text="PC" active>
-            <Link to="/pc/computer">
-              <SidebarItem text="Computer" />
-            </Link>
-            <Link to="/pc/thinclient">
-              <SidebarItem text="Thin Client" />
-            </Link>
-            <Link to="/pc/printer">
-              <SidebarItem text="Printer" />
-            </Link>
-            <Link to="/pc/monitor">
-              <SidebarItem text="Monitor" />
-            </Link>
-          </SidebarItem>
-        </Link>
+          <Link to="/pc">
+            <SidebarItem icon={<Monitor size={20} />} text="PC" active/>
+          </Link>
 
-        <Link to="/dc">
-          <SidebarItem icon={<Server size={20} />} text="DC" />
-        </Link>
+          <Link to="/summary">
+            <SidebarItem icon={<Server size={20} />} text="DC" />
+          </Link>
 
-        <Link to="/telnet">
-          <SidebarItem icon={<Network size={20} />} text="Telnet" />
-        </Link>
+          <Link to="/telnet">
+            <SidebarItem icon={<Network size={20} />} text="Telnet" />
+          </Link>
 
-        <Link to="/project">
-          <SidebarItem icon={<Briefcase size={20} />} text="Project" />
-        </Link>
+          <Link to="/project">
+            <SidebarItem icon={<Briefcase size={20} />} text="Project" />
+          </Link>
 
-        <Link to="/cab">
-          <SidebarItem icon={<FolderTree size={20} />} text="CAB" />
-        </Link>
+          <Link to="/cab">
+            <SidebarItem icon={<FolderTree size={20} />} text="CAB" />
+          </Link>
 
-        <Link to="/sop_cp">
-          <SidebarItem icon={<BookOpen size={20} />} text="SOP/CP" />
-        </Link>
+          <Link to="/sop_cp">
+            <SidebarItem icon={<BookOpen size={20} />} text="SOP/CP" />
+          </Link>
 
-        <Link to="/SurveyFeedbackAveris">
-          <SidebarItem icon={<BarChartHorizontal size={20} />} text="Survey Feedback Averis" />
-        </Link>
+          <Link to="/SurveyFeedbackAveris">
+            <SidebarItem
+              icon={<BarChartHorizontal size={20} />}
+              text="Survey Feedback Averis"
+            />
+          </Link>
 
-        <Link to="/OtherDocuments">
-          <SidebarItem icon={<Folder size={20} />} text="Other Documents" />
-        </Link>
+          <Link to="/OtherDocuments">
+            <SidebarItem icon={<Folder size={20} />} text="Other Documents" />
+          </Link>
 
-        <Link to="/help">
-          <SidebarItem icon={<Info size={20} />} text="Help" />
-        </Link>
+          <Link to="/help">
+            <SidebarItem icon={<Info size={20} />} text="Help" />
+          </Link>
 
-        <hr className="my-3" />
-      </Sidebar>
+          <hr className="my-3" />
+        </Sidebar>
 
 <div className="flex-1 p-6 overflow-x-auto">
 
 <Navbar>
           <Link to ="/pc"><NavbarItem>PC</NavbarItem></Link>
-          <Link to ="/printer"><NavbarItem >Printer</NavbarItem></Link>
+          <Link to ="/printer"><NavbarItem>Printer</NavbarItem></Link>
           <Link to ="/thinclient"><NavbarItem>ThinClient</NavbarItem></Link>
-          <Link to ="/monitor"><NavbarItem  active={true}>Monitor</NavbarItem></Link>
+          <Link to ="/monitor"><NavbarItem active={true}>Monitor</NavbarItem></Link>
         </Navbar>
-        <div>
-              <h1>monitor</h1>
-          </div>
 </div>
       {/* <div className="flex-1 p-6 overflow-x-auto">
             <div className="flex items-center justify-between mb-4">
@@ -521,7 +507,6 @@ const MonitorComponent = () => {
           </button>
         </div>
       </div> */}
-      
     </div>
   </>
   );

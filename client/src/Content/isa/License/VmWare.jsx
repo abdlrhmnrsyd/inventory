@@ -19,10 +19,9 @@ function LicenseComponent() {
             <SidebarItem icon={<Monitor size={20} />} text="PC" />
           </Link>
 
-          <Link to="/dc">
+          <Link to="/summary">
             <SidebarItem icon={<Server size={20} />} text="DC" />
           </Link>
-
           <Link to="/telnet">
             <SidebarItem icon={<Network size={20} />} text="Telnet" />
           </Link>

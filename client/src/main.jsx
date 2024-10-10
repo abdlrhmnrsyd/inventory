@@ -33,10 +33,26 @@ import Audit2 from "./Content/isa/Audit2/Audit2.jsx";
 import Pc from "./Content/pc/Pc.jsx";
 import ThinClient from "./Content/pc/thinclient.jsx";
 import Printer from "./Content/pc/printer.jsx";
-import Monitor from "./Content/pc/monitor.jsx";
+import Monitor from "./Content/pc/Monitor.jsx";
 
 
-import Dc from "./Content/dc/Dc.jsx";
+import Summary from "./Content/dc/Summary.jsx";
+import Master from "./Content/dc/Master.jsx";
+import Server from "./Content/dc/Server.jsx";
+import Storage from "./Content/dc/Storage.jsx";
+import Switch from "./Content/dc/Switch.jsx";
+import Ruter from "./Content/dc/Ruter.jsx";
+import Pmis from "./Content/dc/Pmis.jsx";
+import SecurityDevice from "./Content/dc/Security_Device.jsx";
+import TapeDriver from "./Content/dc/Tape_Driver.jsx";
+import TapeLibrary from "./Content/dc/Tape_Library.jsx";
+import Firewall from "./Content/dc/Firewall.jsx";
+import DcUtilityEquipment from "./Content/dc/Dc_Utility_Equipment.jsx";
+import MonitorDevice from "./Content/dc/Monitoring_Device.jsx";
+import FiberOptik from "./Content/dc/Fiber_Optik.jsx";
+import DecomServer from "./Content/dc/Decom_Server.jsx";
+
+
 import Telnet from "./Content/telnet/Telnet.jsx";
 import Cab from "./Content/cab/Cab.jsx";
 import Help from "./Content/help/Help.jsx";
@@ -50,6 +66,9 @@ import LoginForm from "./LoginForm.jsx";
 import Profile from "./ProfilePage.jsx";
 
 import "./index.css";
+
+
+
 
 createRoot(document.getElementById("root")).render(
   <Router>
@@ -88,8 +107,24 @@ createRoot(document.getElementById("root")).render(
       <Route path="/printer" element={<Printer />} />
       <Route path="/monitor" element={<Monitor />} />
 
-
-      <Route path="/dc" element={<Dc />} />
+       {/* Route DC */}
+      <Route path="/summary" element={<Summary />} />
+      <Route path="/master" element={<Master />} />
+      <Route path="/server" element={<Server />} />
+      <Route path="/storage" element={<Storage />}/>
+      <Route path="/switch" element={<Switch />} />
+      <Route path="/ruter" element={<Ruter />} />
+      <Route path="/pmis" element={<Pmis />} />
+      <Route path="/security_device" element={<SecurityDevice />} />
+      <Route path="/tape_driver" element={<TapeDriver/>} />
+      <Route path="/tape_library" element={<TapeLibrary/>} />
+      <Route path="/firewall" element={<Firewall/>} />
+      <Route path="/dc_Utility_equipment" element={<DcUtilityEquipment/>} />
+      <Route path="/monitoring_device" element={<MonitorDevice />} />
+      <Route path="/fiber_optik" element={<FiberOptik />} />
+      <Route path="/decom_server" element={<DecomServer />} />
+     
+      {/* End Of Route DC */}
       <Route path="/telnet" element={<Telnet />} />
       <Route path="/cab" element={<Cab />} />
       <Route path="/help" element={<Help />} />

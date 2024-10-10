@@ -5,6 +5,8 @@ import Sidebar, { SidebarItem } from "../../components/Sidebar";
 import Navbar from "../../components/Navbar"; // Import Navbar
 import ProfileCard from '../../components/ProfileCard';
 import LinktoFolder from '../../components/LinktoFolder';
+import Fileuploadpage from '../../components/Fileuploadpage';
+
 function ProjectComponent() {
   return (
     <>
@@ -18,7 +20,7 @@ function ProjectComponent() {
             <SidebarItem icon={<Monitor size={20} />} text="PC" />
           </Link>
 
-          <Link to="/dc">
+          <Link to="/summary">
             <SidebarItem icon={<Server size={20} />} text="DC" />
           </Link>
 
@@ -55,6 +57,7 @@ function ProjectComponent() {
         
         <div className="flex-1 p-6 main-content">
         <LinktoFolder/>
+       
         </div>
       </div>
     </>

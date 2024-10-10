@@ -177,55 +177,41 @@ const MicrosoftComponent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (
-      !form.company_name ||
-      !form.department ||
-      !form.user_name ||
-      !form.account ||
-      !form.products_name ||
-      !form.sku_number ||
-      !form.version ||
-      !form.type_license ||
-      !form.contact_number ||
-      !form.qty ||
-      !form.effective_date ||
-      !form.expired_date ||
-      !form.po ||
-      !form.vendor_name ||
-      !form.email_vendor
+      !form.area ||
+      !form.role ||
+      !form.ip_address ||
+      !form.hostname ||
+      !form.brand ||
+      !form.device_type ||
+      !form.serial_number ||
+      !form.source_date
     ) {
       showAlert("Please fill in all fields before submitting.", true);
       return;
     }
-
+  
     try {
       if (form.id) {
-        await axios.put(`http://localhost:3001/microsoft/${form.id}`, form);
-        showAlert("License updated successfully!");
+        await axios.put(`http://localhost:3001/telnet/${form.id}`, form);
+        showAlert("Telnet entry updated successfully!");
         setIsEditSuccess(true);
         setTimeout(() => setIsEditSuccess(false), 3000);
       } else {
-        await axios.post("http://localhost:3001/microsoft", form);
-        showAlert("License added successfully!");
+        await axios.post("http://localhost:3001/telnet", form);
+        showAlert("Telnet entry added successfully!");
       }
       setForm({
         id: "",
-        company_name: "",
-        department: "",
-        user_name: "",
-        account: "",
-        products_name: "",
-        sku_number: "",
-        version: "",
-        type_license: "",
-        contact_number: "",
-        qty: "",
-        effective_date: "",
-        expired_date: "",
-        po: "",
-        vendor_name: "",
-        email_vendor: "",
+        area: "",
+        role: "",
+        ip_address: "",
+        hostname: "",
+        brand: "",
+        device_type: "",
+        serial_number: "",
+        source_date: "",
       });
-      fetchMicrosoft();
+      fetchTelnet(); // Function to refresh telnet data
       setFormVisible(false);
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 3000);
@@ -233,7 +219,7 @@ const MicrosoftComponent = () => {
       console.error(err.message);
     }
   };
-
+  
   const handleEdit = (microsoft) => {
     // Convert date strings to the format expected by input type="date"
     const formattedEffectiveDate = microsoft.effective_date.split("T")[0];
@@ -438,7 +424,7 @@ const MicrosoftComponent = () => {
             <SidebarItem icon={<Monitor size={20} />} text="PC" />
           </Link>
 
-          <Link to="/dc">
+         <Link to="/summary">
             <SidebarItem icon={<Server size={20} />} text="DC" />
           </Link>
 

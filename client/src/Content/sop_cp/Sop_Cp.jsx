@@ -17,7 +17,7 @@ function SopComponent() {
             <SidebarItem icon={<Monitor size={20} />} text="PC" />
           </Link>
 
-          <Link to="/dc">
+          <Link to="/summary">
             <SidebarItem icon={<Server size={20} />} text="DC" />
           </Link>
 

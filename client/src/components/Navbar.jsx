@@ -15,6 +15,7 @@ const Navbar = ({ children }) => {
           isSelected: selected === index,
         })
       )}
+      
     </nav>
   );
 };

@@ -42,7 +42,7 @@ const PrinterComponent = () => {
             <SidebarItem icon={<Monitor size={20} />} text="PC" active/>
           </Link>
 
-          <Link to="/dc">
+          <Link to="/summary">
             <SidebarItem icon={<Server size={20} />} text="DC" />
           </Link>
 
@@ -86,11 +86,8 @@ const PrinterComponent = () => {
           <Link to ="/pc"><NavbarItem>PC</NavbarItem></Link>
           <Link to ="/printer"><NavbarItem active={true}>Printer</NavbarItem></Link>
           <Link to ="/thinclient"><NavbarItem>ThinClient</NavbarItem></Link>
-          <Link to ="/monitor"><NavbarItem >Monitor</NavbarItem></Link>
+          <Link to ="/monitor"><NavbarItem>Monitor</NavbarItem></Link>
         </Navbar>
-        <div>
-              <h1>printer</h1>
-          </div>
 </div>
       {/* <div className="flex-1 p-6 overflow-x-auto">
             <div className="flex items-center justify-between mb-4">

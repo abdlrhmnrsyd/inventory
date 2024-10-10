@@ -56,7 +56,7 @@ const ThinClientComponent = () => {
           </SidebarItem>
         </Link>
 
-        <Link to="/dc">
+        <Link to="/summary">
           <SidebarItem icon={<Server size={20} />} text="DC" />
         </Link>
 
@@ -97,11 +97,8 @@ const ThinClientComponent = () => {
           <Link to ="/pc"><NavbarItem>PC</NavbarItem></Link>
           <Link to ="/printer"><NavbarItem >Printer</NavbarItem></Link>
           <Link to ="/thinclient"><NavbarItem active={true}>ThinClient</NavbarItem></Link>
-          <Link to ="/monitor"><NavbarItem >Monitor</NavbarItem></Link>
+          <Link to ="/monitor"><NavbarItem>Monitor</NavbarItem></Link>
         </Navbar>
-        <div>
-              <h1>thinclient</h1>
-          </div>
 </div>
       {/* <div className="flex-1 p-6 overflow-x-auto">
             <div className="flex items-center justify-between mb-4">
