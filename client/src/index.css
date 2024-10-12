@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@keyframes fade-in-down {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-down {
+    animation: fade-in-down 1s ease-out;
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 1s ease-out;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 1.5s ease-out;
+  }
+  /* Menampilkan scrollbar horizontal selalu */
+.scrollbar-thin {
+  scrollbar-width: thin; /* Untuk browser yang mendukung */
+}
+
+.scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
+  background-color: #9ca3af; /* Warna scrollbar */
+  border-radius: 9999px;
+}
+
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+  background: #f3f4f6; /* Warna track scrollbar */
+}
+/* Untuk memastikan scrollbar horizontal selalu muncul */
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+/* Styling scrollbar */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 8px; /* Tinggi scrollbar horizontal */
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: #9ca3af; /* Warna scrollbar */
+  border-radius: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f3f4f6; /* Warna track scrollbar */
+}
+
+.table-wrapper {
+  overflow-x: scroll; /* Ensure horizontal scrollbar always appears */
+  overflow-y: hidden; /* Ensure vertical scrollbar does not appear */
+  white-space: nowrap; /* Prevent table cells from wrapping */
+}
+
+.table {
+  min-width: 100%; /* Ensure table takes full width */
+}
