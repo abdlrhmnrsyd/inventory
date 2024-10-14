@@ -25,6 +25,7 @@ import ProfileCard from "../../components/ProfileCard";
 // ... existing code ...
 
 function SummaryComponent() {
+  const [activeSubmenu, setActiveSubmenu] = useState("Summary" ); // Menyimpan submenu aktif
   const [dropdownVisible, setDropdownVisible] = useState({
     management: false,
     tape: false,
@@ -39,13 +40,17 @@ function SummaryComponent() {
 
   const toggleDropdown = (name) => {
     setDropdownVisible((prev) => {
-      // Reset all dropdowns to false, then toggle the selected one
       const newDropdownState = Object.keys(prev).reduce((acc, key) => {
         acc[key] = key === name ? !prev[key] : false;
         return acc;
       }, {});
       return newDropdownState;
     });
+  };
+
+  const handleSubmenuClick = (submenu) => {
+    setActiveSubmenu(submenu); // Memperbarui submenu aktif
+    toggleDropdown("management"); // Menutup dropdown setelah memilih submenu
   };
   return (
     <>
@@ -104,8 +109,7 @@ function SummaryComponent() {
                 onClick={() => toggleDropdown("management")}
                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center"
                 type="button"
-              >
-                Management
+              > {activeSubmenu === "Management" ? "Management" : activeSubmenu} {/* Menampilkan submenu aktif atau 'Management' */}
                 <svg
                   className="w-2.5 h-2.5 ms-3"
                   aria-hidden="true"
@@ -128,6 +132,7 @@ function SummaryComponent() {
                     <li>
                       <Link
                         to="/summary"
+                        onClick={() => handleSubmenuClick("Summary")} // Memperbarui submenu aktif saat diklik
                         className="block px-4 py-2 hover:bg-gray-100"
                       >
                         Summary
@@ -136,6 +141,7 @@ function SummaryComponent() {
                     <li>
                       <Link
                         to="/master"
+                        
                         className="block px-4 py-2 hover:bg-gray-100"
                       >
                         Master
@@ -145,7 +151,6 @@ function SummaryComponent() {
                 </div>
               )}
             </div>
-
             {/* Repeat similar structure for other dropdowns */}
             <div className="relative inline-block text-left">
               <button

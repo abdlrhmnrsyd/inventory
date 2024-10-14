@@ -30,7 +30,6 @@ import * as XLSX from "xlsx"; // Import XLSX library
 import Swal from "sweetalert2"; // Import SweetAlert
 
 function ServerComponent() {
-  
   const [servers, setServers] = useState([]); // Assuming you have a state for servers
   const [searchTerm, setSearchTerm] = useState(""); // State for search term
   const tableContainerRef = useRef(null); // Reference for the table container
@@ -39,6 +38,18 @@ function ServerComponent() {
   const [isEditSuccess, setIsEditSuccess] = useState(false);
   const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
+  const [duplicateFields, setDuplicateFields] = useState({ // State untuk menandai field duplikat
+    mac_address: false,
+    ip_address: false,
+    asset_tag_number: false,
+});
+const [errorMessages, setErrorMessages] = useState({ // State untuk menyimpan pesan kesalahan
+  mac_address: "",
+  ip_address: "",
+  asset_tag_number: "",
+});
+const [isDisabled, setIsDisabled] = useState(false);
+  
 
   const [isFormVisible, setIsFormVisible] = useState(false); // State untuk form visibility
   const [searchField, setSearchField] = useState(""); // State for search field
@@ -116,10 +127,56 @@ function ServerComponent() {
     setIsFormVisible(true); // Show the form
   };
 
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
-  };
+
+    // Cek apakah ada duplikat pada mac_address, ip_address, atau asset_tag_number
+    const newDuplicateFields = { mac_address: false, ip_address: false, asset_tag_number: false };
+    const newErrorMessages = { mac_address: "", ip_address: "", asset_tag_number: "" };
+
+    // Cek duplikat
+    if (name === "mac_address") {
+        newDuplicateFields.mac_address = servers.some(server => server.mac_address === value);
+        if (newDuplicateFields.mac_address) {
+            newErrorMessages.mac_address = "already";
+        }
+    } else if (name === "ip_address") {
+        newDuplicateFields.ip_address = servers.some(server => server.ip_address === value);
+        if (newDuplicateFields.ip_address) {
+            newErrorMessages.ip_address = "already";
+        }
+    } else if (name === "asset_tag_number") {
+        newDuplicateFields.asset_tag_number = servers.some(server => server.asset_tag_number === value);
+        if (newDuplicateFields.asset_tag_number) {
+            newErrorMessages.asset_tag_number = "already";
+        }
+    }
+
+    // Set duplicate fields state
+    setDuplicateFields(newDuplicateFields);
+    setErrorMessages(newErrorMessages);
+
+    // Jika ada duplikat, tampilkan alert dan disable input lainnya
+    if (newDuplicateFields[name]) {
+        
+        setIsDisabled(true); // Disable semua input
+        // Kosongkan input lainnya
+        const newForm = { ...form };
+        Object.keys(newForm).forEach(key => {
+            if (key !== name) {
+                newForm[key] = ""; // Clear other fields
+            }
+        });
+        setForm(newForm);
+    } else {
+        // Jika tidak ada duplikat, aktifkan kembali input
+        setIsDisabled(false);
+    }
+};
+
+
 
   const handleEdit = (server) => {
     setForm(server); // Mengisi form dengan data server yang dipilih
@@ -127,57 +184,85 @@ function ServerComponent() {
   };
 
   function handleSubmit(e) {
-    e.preventDefault(); 
+    e.preventDefault();
 
     // Cek apakah ada field yang kosong
     for (const [key, value] of Object.entries(form)) {
-        if (value === "") {
-            Swal.fire("Error!", `Field ${key} cannot be empty.`, "error");
-            return; // Hentikan pengiriman jika ada field yang kosong
-        }
+      if (value === "") {
+        Swal.fire("Error!", `Field ${key} cannot be empty.`, "error");
+        return; // Hentikan pengiriman jika ada field yang kosong
+      }
+    }
+
+    // Cek apakah mac_address, ip_address, dan asset_tag_number sudah ada
+    const isDuplicate = servers.some(
+      (server) =>
+        (server.mac_address === form.mac_address &&
+          form.mac_address !== form.mac_address) ||
+        (server.ip_address === form.ip_address &&
+          form.ip_address !== form.ip_address) ||
+        (server.asset_tag_number === form.asset_tag_number &&
+          form.asset_tag_number !== form.asset_tag_number)
+    );
+
+    if (isDuplicate) {
+      Swal.fire(
+        "Error!",
+        "MAC Address, IP Address, or Asset Tag Number must be unique.",
+        "error"
+      );
+      return; // Hentikan pengiriman jika ada duplikat
     }
 
     // Jika semua field terisi, lanjutkan dengan pengiriman data
     const isActive = form.active === "true" || form.active === true; // Pastikan ini boolean
 
     const dataToInsert = {
-        ...form,
-        active: isActive, // Pastikan active adalah boolean
+      ...form,
+      active: isActive, // Pastikan active adalah boolean
     };
 
     console.log("Data to insert:", dataToInsert); // Log data yang akan dikirim
 
     // Cek apakah form memiliki ID untuk menentukan apakah ini edit atau create
     if (form.id) {
-        // Jika ada ID, lakukan update
-        axios
-            .put(`http://localhost:3001/server/${form.id}`, dataToInsert)
-            .then(() => {
-                Swal.fire("Updated!", "The server has been updated.", "success");
-                fetchServers(); // Refresh daftar server
-                setForm({}); // Reset form setelah pengiriman
-                setIsFormVisible(false); // Sembunyikan form
-            })
-            .catch((err) => {
-                console.error("Error updating server:", err); // Log error
-                Swal.fire("Error!", "There was an error updating the server.", "error");
-            });
+      // Jika ada ID, lakukan update
+      axios
+        .put(`http://localhost:3001/server/${form.id}`, dataToInsert)
+        .then(() => {
+          Swal.fire("Updated!", "The server has been updated.", "success");
+          fetchServers(); // Refresh daftar server
+          setForm({}); // Reset form setelah pengiriman
+          setIsFormVisible(false); // Sembunyikan form
+        })
+        .catch((err) => {
+          console.error("Error updating server:", err); // Log error
+          Swal.fire(
+            "Error!",
+            "There was an error updating the server.",
+            "error"
+          );
+        });
     } else {
-        // Jika tidak ada ID, lakukan create
-        axios
-            .post("http://localhost:3001/server", dataToInsert)
-            .then(() => {
-                Swal.fire("Created!", "The server has been created.", "success");
-                fetchServers(); // Refresh daftar server
-                setForm({}); // Reset form setelah pengiriman
-                setIsFormVisible(false); // Sembunyikan form
-            })
-            .catch((err) => {
-                console.error("Error creating server:", err); // Log error
-                Swal.fire("Error!", "There was an error creating the server.", "error");
-            });
+      // Jika tidak ada ID, lakukan create
+      axios
+        .post("http://localhost:3001/server", dataToInsert)
+        .then(() => {
+          Swal.fire("Created!", "The server has been created.", "success");
+          fetchServers(); // Refresh daftar server
+          setForm({}); // Reset form setelah pengiriman
+          setIsFormVisible(false); // Sembunyikan form
+        })
+        .catch((err) => {
+          console.error("Error creating server:", err); // Log error
+          Swal.fire(
+            "Error!",
+            "There was an error creating the server.",
+            "error"
+          );
+        });
     }
-}
+  }
 
   const toggleForm = () => {
     setIsFormVisible(!isFormVisible); // Mengubah visibilitas form
@@ -352,9 +437,7 @@ function ServerComponent() {
     });
   };
 
- // State untuk menampilkan form upload
-
-  
+  // State untuk menampilkan form upload
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -392,16 +475,15 @@ function ServerComponent() {
     setSearchFieldTerm(e.target.value.toLowerCase());
     const fields = document.querySelectorAll("input, select");
     fields.forEach((field) => {
-        const label = field.previousElementSibling;
-        if (label && label.textContent.toLowerCase().includes(searchFieldTerm)) {
-            field.scrollIntoView({ behavior: "smooth", block: "center" });
-            field.classList.add("bg-yellow-100");
-        } else {
-            field.classList.remove("bg-yellow-100");
-        }
+      const label = field.previousElementSibling;
+      if (label && label.textContent.toLowerCase().includes(searchFieldTerm)) {
+        field.scrollIntoView({ behavior: "smooth", block: "center" });
+        field.classList.add("bg-yellow-100");
+      } else {
+        field.classList.remove("bg-yellow-100");
+      }
     });
-};
-
+  };
 
   const [isSearchInputVisible, setIsSearchInputVisible] = useState(false); // State to manage search input visibility
 
@@ -421,18 +503,18 @@ function ServerComponent() {
     managementRouter: false, // Unique key for router and pmis
   });
 
+ 
+  const [activeDropdown, setActiveDropdown] = useState("Management"); // State to track active dropdown
+
+  // Function to handle dropdown toggle and set active dropdown
   const toggleDropdown = (name) => {
-    setDropdownVisible((prev) => {
-      // Reset all dropdowns to false, then toggle the selected one
-      const newDropdownState = Object.keys(prev).reduce((acc, key) => {
-        acc[key] = key === name ? !prev[key] : false;
-        return acc;
-      }, {});
-      return newDropdownState;
-    });
+    setActiveDropdown(name); // Update active dropdown
+    setDropdownVisible((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
   };
 
-  
   return (
     <>
       <div className="flex">
@@ -618,7 +700,7 @@ function ServerComponent() {
                         to="/decom_server"
                         className="block px-4 py-2 hover:bg-gray-100"
                       >
-                        Decom Server 
+                        Decom Server
                       </Link>
                     </li>
                   </ul>
@@ -744,7 +826,7 @@ function ServerComponent() {
                 </svg>
               </button>
               {dropdownVisible.device && (
-               <div className="absolute z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
+                <div className="absolute z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
                   <ul className="py-2 text-sm text-gray-700">
                     <li>
                       <Link
@@ -1106,7 +1188,6 @@ function ServerComponent() {
           </div>
         </div>
       </div>
-
       {isFormVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="max-w-5xl p-8 mx-2 bg-white border border-gray-300 rounded-md shadow-md">
@@ -1150,6 +1231,7 @@ function ServerComponent() {
                     }`}
                     value={form.rack}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1168,6 +1250,7 @@ function ServerComponent() {
                     }`}
                     value={form.seq}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1181,12 +1264,12 @@ function ServerComponent() {
                     type="text"
                     id="type"
                     name="type"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "type" ? "bg-yellow-100" : ""
                     }`}
                     value={form.type}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1200,12 +1283,12 @@ function ServerComponent() {
                     type="text"
                     id="active"
                     name="active"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "active" ? "bg-yellow-100" : ""
                     }`}
                     value={form.active}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
 
@@ -1220,9 +1303,12 @@ function ServerComponent() {
                     id="asset_category"
                     name="asset_category"
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "asset_category" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "asset_category"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.sset_category}
+                    disabled={isDisabled}
                     onChange={handleInputChange}
                   >
                     <option value="">Select</option>
@@ -1243,12 +1329,12 @@ function ServerComponent() {
                     type="text"
                     id="asset_number"
                     name="asset_number"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "asset_number" ? "bg-yellow-100" : ""
                     }`}
                     value={form.asset_number}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1259,16 +1345,15 @@ function ServerComponent() {
                     Asset Tag Number
                   </label>
                   <input
-                    type="text"
-                    id="asset_tag_number"
-                    name="asset_tag_number"
-                    
-                    className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "asset_tag_number" ? "bg-yellow-100" : ""
-                    }`}
-                    value={form.asset_tag_number}
-                    onChange={handleInputChange}
-                  />
+                type="text"
+                id="asset_tag_number"
+                name="asset_tag_number"
+                className={`w-full p-1 border border-gray-300 rounded-md ${duplicateFields.asset_tag_number ? "border-red-500" : ""}`}
+                value={form.asset_tag_number}
+                onChange={handleInputChange}
+                
+            />
+             {duplicateFields.asset_tag_number && <span className="text-red-500">{errorMessages.asset_tag_number}</span>}
                 </div>
                 <div>
                   <label
@@ -1281,12 +1366,12 @@ function ServerComponent() {
                     type="text"
                     id="site"
                     name="site"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "site" ? "bg-yellow-100" : ""
                     }`}
                     value={form.site}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1300,12 +1385,12 @@ function ServerComponent() {
                     type="text"
                     id="location"
                     name="location"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "location" ? "bg-yellow-100" : ""
                     }`}
                     value={form.location}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1319,12 +1404,12 @@ function ServerComponent() {
                     type="text"
                     id="user"
                     name="user"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "user" ? "bg-yellow-100" : ""
                     }`}
                     value={form.user}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1338,12 +1423,12 @@ function ServerComponent() {
                     type="text"
                     id="job_title"
                     name="job_title"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "job_title" ? "bg-yellow-100" : ""
                     }`}
                     value={form.job_title}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1357,12 +1442,12 @@ function ServerComponent() {
                     type="text"
                     id="bu"
                     name="bu"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "bu" ? "bg-yellow-100" : ""
                     }`}
                     value={form.bu}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1376,12 +1461,12 @@ function ServerComponent() {
                     type="text"
                     id="domain"
                     name="domain"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "domain" ? "bg-yellow-100" : ""
                     }`}
                     value={form.domain}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1395,12 +1480,14 @@ function ServerComponent() {
                     type="text"
                     id="deposit_cyberark"
                     name="deposit_cyberark"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "deposit_cyberark" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "deposit_cyberark"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.deposit_cyberark}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1414,12 +1501,14 @@ function ServerComponent() {
                     type="text"
                     id="server_ownership"
                     name="server_ownership"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "server_ownership" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "server_ownership"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.server_ownership}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1433,12 +1522,14 @@ function ServerComponent() {
                     type="text"
                     id="application_owner"
                     name="application_owner"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "application_owner" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "application_owner"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.application_owner}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1452,12 +1543,12 @@ function ServerComponent() {
                     type="text"
                     id="system_owner"
                     name="system_owner"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "system_owner" ? "bg-yellow-100" : ""
                     }`}
                     value={form.system_owner}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1471,12 +1562,12 @@ function ServerComponent() {
                     type="text"
                     id="business_unit"
                     name="business_unit"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "business_unit" ? "bg-yellow-100" : ""
                     }`}
                     value={form.business_unit}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1490,12 +1581,14 @@ function ServerComponent() {
                     type="text"
                     id="add_in_solarwinds"
                     name="add_in_solarwinds"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "add_in_solarwinds" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "add_in_solarwinds"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.add_in_solarwinds}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1513,6 +1606,7 @@ function ServerComponent() {
                     }`}
                     value={form.server_role}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   >
                     <option value="">Select </option>
                     <option value="Application Server">
@@ -1534,12 +1628,12 @@ function ServerComponent() {
                     type="text"
                     id="brand"
                     name="brand"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "brand" ? "bg-yellow-100" : ""
                     }`}
                     value={form.brand}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1550,16 +1644,15 @@ function ServerComponent() {
                     MAC Address
                   </label>
                   <input
-                    type="text"
-                    id="mac_address"
-                    name="mac_address"
-                    
-                    className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "mac_address" ? "bg-yellow-100" : ""
-                    }`}
-                    value={form.mac_address}
-                    onChange={handleInputChange}
-                  />
+                type="text"
+                id="mac_address"
+                name="mac_address"
+                className={`w-full p-1 border border-gray-300 rounded-md ${duplicateFields.mac_address ? "border-red-500" : ""}`}
+                value={form.mac_address}
+                onChange={handleInputChange}
+            />
+             {duplicateFields.mac_address && <span className="text-red-500">{errorMessages.mac_address}</span>}
+             
                 </div>
                 <div>
                   <label
@@ -1572,12 +1665,12 @@ function ServerComponent() {
                     type="text"
                     id="host_name"
                     name="host_name"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "host_name" ? "bg-yellow-100" : ""
                     }`}
                     value={form.host_name}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1588,16 +1681,15 @@ function ServerComponent() {
                     IP Address
                   </label>
                   <input
-                    type="text"
-                    id="ip_address"
-                    name="ip_address"
-                    
-                    className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "ip_address" ? "bg-yellow-100" : ""
-                    }`}
-                    value={form.ip_address}
-                    onChange={handleInputChange}
-                  />
+                type="text"
+                id="ip_address"
+                name="ip_address"
+                className={`w-full p-1 border border-gray-300 rounded-md ${duplicateFields.ip_address ? "border-red-500" : ""}`}
+                value={form.ip_address}
+                onChange={handleInputChange}
+                
+            />
+            {duplicateFields.ip_address && <span className="text-red-500">{errorMessages.ip_address}</span>}
                 </div>
                 <div>
                   <label
@@ -1610,12 +1702,12 @@ function ServerComponent() {
                     type="text"
                     id="ilo"
                     name="ilo"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "ilo" ? "bg-yellow-100" : ""
                     }`}
                     value={form.ilo}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1629,12 +1721,12 @@ function ServerComponent() {
                     type="text"
                     id="model"
                     name="model"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "model" ? "bg-yellow-100" : ""
                     }`}
                     value={form.model}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1648,12 +1740,12 @@ function ServerComponent() {
                     type="text"
                     id="serial_no"
                     name="serial_no"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "serial_no" ? "bg-yellow-100" : ""
                     }`}
                     value={form.serial_no}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1667,12 +1759,14 @@ function ServerComponent() {
                     type="text"
                     id="physical_virtual"
                     name="physical_virtual"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "physical_virtual" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "physical_virtual"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.physical_virtual}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1686,12 +1780,14 @@ function ServerComponent() {
                     type="text"
                     id="power_supply_model"
                     name="power_supply_model"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "power_supply_model" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "power_supply_model"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.power_supply_model}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1705,12 +1801,12 @@ function ServerComponent() {
                     type="date"
                     id="eosl_date"
                     name="eosl_date"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "eosl_date" ? "bg-yellow-100" : ""
                     }`}
                     value={form.eosl_date}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1724,12 +1820,14 @@ function ServerComponent() {
                     type="date"
                     id="planned_refresh_date"
                     name="planned_refresh_date"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "planned_refresh_date" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "planned_refresh_date"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.planned_refresh_date}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1743,12 +1841,12 @@ function ServerComponent() {
                     type="text"
                     id="eosl_status"
                     name="eosl_status"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "eosl_status" ? "bg-yellow-100" : ""
                     }`}
                     value={form.eosl_status}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1762,12 +1860,12 @@ function ServerComponent() {
                     type="text"
                     id="cip"
                     name="cip"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "cip" ? "bg-yellow-100" : ""
                     }`}
                     value={form.cip}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1781,12 +1879,14 @@ function ServerComponent() {
                     type="date"
                     id="date_purchased"
                     name="date_purchased"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "date_purchased" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "date_purchased"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.date_purchased}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1800,12 +1900,14 @@ function ServerComponent() {
                     type="text"
                     id="power_supply_model_description"
                     name="power_supply_model_description"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "power_supply_model_description" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "power_supply_model_description"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.power_supply_model_description}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1819,12 +1921,14 @@ function ServerComponent() {
                     type="number"
                     id="power_consumption"
                     name="power_consumption"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "power_consumption" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "power_consumption"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.power_consumption}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1838,12 +1942,12 @@ function ServerComponent() {
                     type="number"
                     id="btu_hour"
                     name="btu_hour"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "btu_hour" ? "bg-yellow-100" : ""
                     }`}
                     value={form.btu_hour}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1857,12 +1961,14 @@ function ServerComponent() {
                     type="text"
                     id="po_renewal_maintenance_contract"
                     name="po_renewal_maintenance_contract"
-                  
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "po_renewal_maintenance_contract" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "po_renewal_maintenance_contract"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.po_renewal_maintenance_contract}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1876,12 +1982,14 @@ function ServerComponent() {
                     type="text"
                     id="po_purchase_material"
                     name="po_purchase_material"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "po_purchase_material" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "po_purchase_material"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.po_purchase_material}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1895,12 +2003,14 @@ function ServerComponent() {
                     type="number"
                     id="cost_local_currency"
                     name="cost_local_currency"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "cost_local_currency" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "cost_local_currency"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.cost_local_currency}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1914,12 +2024,14 @@ function ServerComponent() {
                     type="text"
                     id="indicate_which_currency"
                     name="indicate_which_currency"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "indicate_which_currency" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "indicate_which_currency"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.indicate_which_currency}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1933,12 +2045,12 @@ function ServerComponent() {
                     type="text"
                     id="cost_usd"
                     name="cost_usd"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "cost_usd" ? "bg-yellow-100" : ""
                     }`}
                     value={form.cost_usd}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1952,12 +2064,14 @@ function ServerComponent() {
                     type="text"
                     id="utilization_storage"
                     name="utilization_storage"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "utilization_storage" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "utilization_storage"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.utilization_storage}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1971,12 +2085,14 @@ function ServerComponent() {
                     type="number"
                     id="criticality_rating"
                     name="criticality_rating"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "criticality_rating" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "criticality_rating"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.criticality_rating}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -1990,12 +2106,12 @@ function ServerComponent() {
                     type="text"
                     id="dr_enable"
                     name="dr_enable"
-                   
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "dr_enable" ? "bg-yellow-100" : ""
                     }`}
                     value={form.dr_enable}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2009,12 +2125,14 @@ function ServerComponent() {
                     type="date"
                     id="warranty_start_date"
                     name="warranty_start_date"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "warranty_start_date" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "warranty_start_date"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.warranty_start_date}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2028,12 +2146,12 @@ function ServerComponent() {
                     type="date"
                     id="end_date"
                     name="end_date"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "end_date" ? "bg-yellow-100" : ""
                     }`}
                     value={form.end_date}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2047,12 +2165,12 @@ function ServerComponent() {
                     type="date"
                     id="date_disposed"
                     name="date_disposed"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "date_disposed" ? "bg-yellow-100" : ""
                     }`}
                     value={form.date_disposed}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2066,12 +2184,14 @@ function ServerComponent() {
                     type="number"
                     id="core_each_processor"
                     name="core_each_processor"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "core_each_processor" ? "bg-yellow-100" : ""
+                      searchFieldTerm === "core_each_processor"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.core_each_processor}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2085,12 +2205,14 @@ function ServerComponent() {
                     type="number"
                     id="number_of_physical_processor"
                     name="number_of_physical_processor"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "number_of_physical_processor" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "number_of_physical_processor"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.number_of_physical_processor}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2104,12 +2226,12 @@ function ServerComponent() {
                     type="text"
                     id="total_core"
                     name="total_core"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "total_core" ? "bg-yellow-100" : ""
                     }`}
                     value={form.total_core}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2123,12 +2245,12 @@ function ServerComponent() {
                     type="text"
                     id="cpu"
                     name="cpu"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "cpu" ? "bg-yellow-100" : ""
                     }`}
                     value={form.cpu}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2142,12 +2264,12 @@ function ServerComponent() {
                     type="number"
                     id="ram"
                     name="ram"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "ram" ? "bg-yellow-100" : ""
                     }`}
                     value={form.ram}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2161,12 +2283,12 @@ function ServerComponent() {
                     type="text"
                     id="hard_disk"
                     name="hard_disk"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "hard_disk" ? "bg-yellow-100" : ""
                     }`}
                     value={form.hard_disk}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2180,12 +2302,14 @@ function ServerComponent() {
                     type="text"
                     id="part_number_harddisk"
                     name="part_number_harddisk"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "part_number_harddisk" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "part_number_harddisk"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.part_number_harddisk}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2199,12 +2323,12 @@ function ServerComponent() {
                     type="text"
                     id="usb_disabled"
                     name="usb_disabled"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "usb_disabled" ? "bg-yellow-100" : ""
                     }`}
                     value={form.usb_disabled}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2218,12 +2342,12 @@ function ServerComponent() {
                     type="text"
                     id="cd_dvd"
                     name="cd_dvd"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "cd_dvd" ? "bg-yellow-100" : ""
                     }`}
                     value={form.cd_dvd}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2237,12 +2361,12 @@ function ServerComponent() {
                     type="text"
                     id="os_version"
                     name="os_version"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "os_version" ? "bg-yellow-100" : ""
                     }`}
                     value={form.os_version}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2256,12 +2380,12 @@ function ServerComponent() {
                     type="textarea"
                     id="remarks"
                     name="remarks"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "remarks" ? "bg-yellow-100" : ""
                     }`}
                     value={form.remarks}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2275,12 +2399,14 @@ function ServerComponent() {
                     type="text"
                     id="ms_office_version"
                     name="ms_office_version"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
-                      searchFieldTerm === "ms_office_version" ? "bg-yellow-100" : ""
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      searchFieldTerm === "ms_office_version"
+                        ? "bg-yellow-100"
+                        : ""
                     }`}
                     value={form.ms_office_version}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2294,12 +2420,12 @@ function ServerComponent() {
                     type="text"
                     id="druva"
                     name="druva"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "druva" ? "bg-yellow-100" : ""
                     }`}
                     value={form.druva}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2313,12 +2439,12 @@ function ServerComponent() {
                     type="text"
                     id="ip_guard"
                     name="ip_guard"
-                    
                     className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "ip_guard" ? "bg-yellow-100" : ""
                     }`}
                     value={form.ip_guard}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div>
@@ -2332,12 +2458,12 @@ function ServerComponent() {
                     type="text"
                     id="fde"
                     name="fde"
-                   
-                   className={`w-full p-1 border border-gray-300 rounded-md ${
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
                       searchFieldTerm === "fde" ? "bg-yellow-100" : ""
                     }`}
                     value={form.fde}
                     onChange={handleInputChange}
+                    disabled={isDisabled}
                   />
                 </div>
 
@@ -2365,3 +2491,4 @@ function ServerComponent() {
 }
 
 export default ServerComponent;
+

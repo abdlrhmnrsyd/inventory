@@ -1,5 +1,18 @@
-import React, { useState } from 'react';
-import { Info, Database, Monitor, Server, Network, Briefcase, FolderTree, BookOpen, BarChartHorizontal, Folder, Pencil, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Info,
+  Database,
+  Monitor,
+  Server,
+  Network,
+  Briefcase,
+  FolderTree,
+  BookOpen,
+  BarChartHorizontal,
+  Folder,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import Sidebar, { SidebarItem } from "../../components/Sidebar";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
@@ -8,11 +21,11 @@ import Table from "../../components/Table";
 import TableRow from "../../components/TableRow";
 import TableHeader from "../../components/TableHeader";
 import TableCell from "../../components/TableCell";
-import ProfileCard from '../../components/ProfileCard';
+import ProfileCard from "../../components/ProfileCard";
 // ... existing code ...
 
 function FiberOptikComponent() {
-
+  const [activeSubmenu, setActiveSubmenu] = useState("fiber_optik"); // Menyimpan submenu aktif
   const [dropdownVisible, setDropdownVisible] = useState({
     management: false,
     tape: false,
@@ -27,7 +40,6 @@ function FiberOptikComponent() {
 
   const toggleDropdown = (name) => {
     setDropdownVisible((prev) => {
-      // Reset all dropdowns to false, then toggle the selected one
       const newDropdownState = Object.keys(prev).reduce((acc, key) => {
         acc[key] = key === name ? !prev[key] : false;
         return acc;
@@ -35,10 +47,15 @@ function FiberOptikComponent() {
       return newDropdownState;
     });
   };
+
+  const handleSubmenuClick = (submenu) => {
+    setActiveSubmenu(submenu); // Memperbarui submenu aktif
+    toggleDropdown("Infrastruktur"); // Menutup dropdown setelah memilih submenu
+  };
   return (
     <>
       <div className="flex">
-      <Sidebar>
+        <Sidebar>
           <Link to="/budget">
             <SidebarItem icon={<Database size={20} />} text="ISA" />
           </Link>
@@ -68,7 +85,10 @@ function FiberOptikComponent() {
           </Link>
 
           <Link to="/SurveyFeedbackAveris">
-            <SidebarItem icon={<BarChartHorizontal size={20} />} text="Survey Feedback Averis" />
+            <SidebarItem
+              icon={<BarChartHorizontal size={20} />}
+              text="Survey Feedback Averis"
+            />
           </Link>
 
           <Link to="/OtherDocuments">
@@ -81,10 +101,9 @@ function FiberOptikComponent() {
 
           <hr className="my-3" />
         </Sidebar>
-        
+
         <div className="flex-1 p-6 main-content">
-          
-        <Navbar className="flex flex-wrap items-center justify-between">
+          <Navbar className="flex flex-wrap items-center justify-between">
             <div className="relative inline-block text-left">
               <button
                 onClick={() => toggleDropdown("management")}
@@ -218,7 +237,7 @@ function FiberOptikComponent() {
                         to="/decom_server"
                         className="block px-4 py-2 hover:bg-gray-100"
                       >
-                        Decom Server 
+                        Decom Server
                       </Link>
                     </li>
                   </ul>
@@ -344,7 +363,7 @@ function FiberOptikComponent() {
                 </svg>
               </button>
               {dropdownVisible.device && (
-               <div className="absolute z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
+                <div className="absolute z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
                   <ul className="py-2 text-sm text-gray-700">
                     <li>
                       <Link
@@ -373,7 +392,10 @@ function FiberOptikComponent() {
                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center"
                 type="button"
               >
-                Infrastructure
+                {activeSubmenu === "fiber_optik"
+                  ? "Fiber Optic"
+                  : "Infrastructure"}{" "}
+                {/* Update button text */}
                 <svg
                   className="w-2.5 h-2.5 ms-3"
                   aria-hidden="true"
@@ -412,6 +434,7 @@ function FiberOptikComponent() {
                     <li>
                       <Link
                         to="/fiber_optik"
+                        onClick={() => handleSubmenuClick("fiber_optik")}
                         className="block px-4 py-2 hover:bg-gray-100"
                       >
                         Fiber Optic
@@ -423,8 +446,7 @@ function FiberOptikComponent() {
             </div>
           </Navbar>
         </div>
-       
-        
+
         {/* <Table>
             <TableHeader>
               <TableCell>No</TableCell>
@@ -489,7 +511,7 @@ function FiberOptikComponent() {
             </TableRow>
            
           </Table> */}
-        </div>
+      </div>
     </>
   );
 }

@@ -507,7 +507,7 @@ app.post("/server/import", async (req, res) => {
         // Add to sets to track duplicates in the current batch
         ip_address.add(item.ip_address);
 
-        // Insert into the 'telnet' table
+        // Insert into the 'server' table
         await pool.query(
           `INSERT INTO server (
     rack,
