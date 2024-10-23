@@ -373,9 +373,7 @@ const [isDisabled, setIsDisabled] = useState(false);
       showAlert("No file selected", true);
       return;
     }
-
-    console.log("File selected:", file.name);
-
+  
     const result = await Swal.fire({
       title: "Confirm Upload",
       text: `Are you sure you want to upload the file: ${file.name}?`,
@@ -384,7 +382,7 @@ const [isDisabled, setIsDisabled] = useState(false);
       confirmButtonText: "Yes, upload it!",
       cancelButtonText: "Cancel",
     });
-
+  
     if (result.isConfirmed) {
       const reader = new FileReader();
       reader.onload = async (event) => {
@@ -394,34 +392,30 @@ const [isDisabled, setIsDisabled] = useState(false);
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           const data = XLSX.utils.sheet_to_json(worksheet);
-          console.log("Parsed Excel data:", data);
-
-          const response = await axios.post(
-            "http://localhost:3001/server/import",
-            data
-          );
-          console.log("Server response:", response.data);
+  
+          const response = await axios.post("http://localhost:3001/server/import", data);
           showAlert("Data imported successfully!");
           fetchServers();
-          setUploadVisible(false); // Close the upload form after success
+          setUploadVisible(false);
         } catch (error) {
           console.error("Error importing data:", error);
-          showAlert(
-            `Error importing data: ${error.message}. Please check the console for details.`,
-            true
-          );
+          // Check if the error response contains a message
+          if (error.response && error.response.data && error.response.data.message) {
+            showAlert(error.response.data.message, true); // Show the specific error message
+          } else {
+            showAlert("Error importing data: Please check the console for details.", true);
+          }
         }
       };
-
+  
       reader.onerror = (error) => {
         console.error("Error reading file:", error);
         showAlert("Error reading file. Please try again.", true);
       };
-
+  
       reader.readAsBinaryString(file);
     }
   };
-
   const [isUploadVisible, setUploadVisible] = useState(false); // State untuk menampilkan form upload
 
   const toggleUploadForm = () => {

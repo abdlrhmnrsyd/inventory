@@ -37,7 +37,6 @@ const VendorRepairComponent = () => {
     id: "",
     repair_date: "",
     ticket_number: "",
-    ageing: "",
     engineer_name: "",
     username: "",
     bu_name: "",
@@ -51,9 +50,7 @@ const VendorRepairComponent = () => {
     quotation_date: "",
     cost_without: "",
     status: "",
-    vendor_delivery: "",
-    date: "",
-    created_by_ses: "",
+    vendor_delivery_date: "",
     remarks: "",
   });
   //format date
@@ -162,7 +159,6 @@ const VendorRepairComponent = () => {
     if (
       !form.repair_date ||
       !form.ticket_number ||
-      !form.ageing ||
       !form.engineer_name ||
       !form.username ||
       !form.bu_name ||
@@ -176,9 +172,7 @@ const VendorRepairComponent = () => {
       !form.quotation_date ||
       !form.cost_without ||
       !form.status ||
-      !form.vendor_delivery ||
-      !form.date ||
-      !form.created_by_ses ||
+      !form.vendor_delivery_date ||
       !form.remarks
     ) {
       showAlert("Please fill in all fields before submitting.");
@@ -201,7 +195,6 @@ const VendorRepairComponent = () => {
         id: "",
         repair_date: "",
         ticket_number: "",
-        ageing: "",
         engineer_name: "",
         username: "",
         bu_name: "",
@@ -215,9 +208,7 @@ const VendorRepairComponent = () => {
         quotation_date: "",
         cost_without: "",
         status: "",
-        vendor_delivery: "",
-        date: "",
-        created_by_ses: "",
+        vendor_delivery_date: "",
         remarks: "",
       });
       fetchVendorRepair();
@@ -398,7 +389,6 @@ const VendorRepairComponent = () => {
         id: "",
         repair_date: "",
         ticket_number: "",
-        ageing: "",
         engineer_name: "",
         username: "",
         bu_name: "",
@@ -412,9 +402,7 @@ const VendorRepairComponent = () => {
         quotation_date: "",
         cost_without: "",
         status: "",
-        vendor_delivery: "",
-        date: "",
-        created_by_ses: "",
+        vendor_delivery_date: "",
         remarks: "",
       });
     }
@@ -422,6 +410,14 @@ const VendorRepairComponent = () => {
 
   const toggleImportForm = () => {
     setImportFormVisible(!isImportFormVisible);
+  };
+
+  const calculateAgeing = (repairDate, deliveryDate) => {
+    const repair = new Date(repairDate);
+    const delivery = new Date(deliveryDate);
+    const differenceInTime = delivery - repair;
+    const differenceInDays = differenceInTime / (1000 * 3600 * 24); // Convert milliseconds to days
+    return differenceInDays >= 0 ? differenceInDays : 0; // Return 0 if negative
   };
 
   return (
@@ -575,9 +571,7 @@ const VendorRepairComponent = () => {
                       <TableCell>Quotation Date</TableCell>
                       <TableCell>Cost Without</TableCell>
                       <TableCell>Status</TableCell>
-                      <TableCell>Vendor Delivery</TableCell>
-                      <TableCell>Date</TableCell>
-                      <TableCell>Created By Ses</TableCell>
+                      <TableCell>Vendor Delivery Date</TableCell>
                       <TableCell>Remarks</TableCell>
                       <TableCell>Action</TableCell>
                     </TableHeader>
@@ -595,7 +589,7 @@ const VendorRepairComponent = () => {
                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{formatDate(repair.repair_date)}</TableCell>
                         <TableCell>{repair.ticket_number}</TableCell>
-                        <TableCell>{repair.ageing}</TableCell>
+                        <TableCell>{calculateAgeing(repair.repair_date, repair.vendor_delivery_date)} days</TableCell>
                         <TableCell>{repair.engineer_name}</TableCell>
                         <TableCell>{repair.username}</TableCell>
                         <TableCell>{repair.bu_name}</TableCell>
@@ -611,9 +605,7 @@ const VendorRepairComponent = () => {
                         </TableCell>
                         <TableCell>{repair.cost_without}</TableCell>
                         <TableCell>{repair.status}</TableCell>
-                        <TableCell>{repair.vendor_delivery}</TableCell>
-                        <TableCell>{formatDate(repair.date)}</TableCell>
-                        <TableCell>{repair.created_by_ses}</TableCell>
+                        <TableCell>{formatDate(repair.vendor_delivery_date)}</TableCell>
                         <TableCell>{repair.remarks}</TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center space-x-1">
@@ -685,18 +677,6 @@ const VendorRepairComponent = () => {
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
                         />
                         {error && <p className="text-red-500">{error}</p>}
-                      </div>
-                      <div className="col-span-1">
-                        <label htmlFor="ageing">Ageing</label>
-                        <input
-                          type="text"
-                          id="ageing"
-                          name="ageing"
-                          value={form.ageing}
-                          onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                          disabled={isTicketNumberDuplicate}
-                        />
                       </div>
                       <div className="col-span-1">
                         <label htmlFor="engineer_name">Engineer Name</label>
@@ -859,36 +839,12 @@ const VendorRepairComponent = () => {
                         </select>
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="vendor_delivery">Vendor Delivery</label>
-                        <input
-                          type="text"
-                          id="vendor_delivery"
-                          name="vendor_delivery"
-                          value={form.vendor_delivery}
-                          onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                          disabled={isTicketNumberDuplicate}
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <label htmlFor="date">Date</label>
+                        <label htmlFor="date">Vendor Delivery Date</label>
                         <input
                           type="date"
-                          id="date"
-                          name="date"
-                          value={form.date}
-                          onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                          disabled={isTicketNumberDuplicate}
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <label htmlFor="created_by_ses">Created By Ses</label>
-                        <input
-                          type="text"
-                          id="created_by_ses"
-                          name="created_by_ses"
-                          value={form.created_by_ses}
+                          id="vendor_delivery_date"
+                          name="vendor_delivery_date"
+                          value={form.vendor_delivery_date}
                           onChange={handleInputChange}
                           className="w-full px-2 py-1 border border-gray-300 rounded-md"
                           disabled={isTicketNumberDuplicate}

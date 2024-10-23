@@ -15,6 +15,7 @@ function MonitoringDeviceComponent() {
 
 
 
+  const [activeSubmenu, setActiveSubmenu] = useState("Device" ); // Menyimpan submenu aktif
   const [dropdownVisible, setDropdownVisible] = useState({
     management: false,
     tape: false,
@@ -29,13 +30,17 @@ function MonitoringDeviceComponent() {
 
   const toggleDropdown = (name) => {
     setDropdownVisible((prev) => {
-      // Reset all dropdowns to false, then toggle the selected one
       const newDropdownState = Object.keys(prev).reduce((acc, key) => {
         acc[key] = key === name ? !prev[key] : false;
         return acc;
       }, {});
       return newDropdownState;
     });
+  };
+
+  const handleSubmenuClick = (submenu) => {
+    setActiveSubmenu(submenu); // Memperbarui submenu aktif
+    toggleDropdown("Device"); // Menutup dropdown setelah memilih submenu
   };
   return (
     <>
@@ -328,7 +333,7 @@ function MonitoringDeviceComponent() {
                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center"
                 type="button"
               >
-                Device
+                {activeSubmenu === "Device" ? "Device" : activeSubmenu}
                 <svg
                   className="w-2.5 h-2.5 ms-3"
                   aria-hidden="true"
@@ -359,12 +364,13 @@ function MonitoringDeviceComponent() {
                     <li>
                       <Link
                         to="/monitoring_device"
+                        onClick={() => handleSubmenuClick("Monitoring device")} 
                         className="block px-4 py-2 hover:bg-gray-100"
                       >
                         Monitoring Device
                       </Link>
                     </li>
-                  </ul>
+                  </ul >
                 </div>
               )}
             </div>

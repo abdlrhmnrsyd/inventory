@@ -467,7 +467,7 @@ app.post("/telnet/import", async (req, res) => {
   }
 });
 
-// Import Excel server
+
 // Import Excel server
 app.post("/server/import", async (req, res) => {
   console.log("Received data:", JSON.stringify(req.body, null, 2));
@@ -495,7 +495,7 @@ app.post("/server/import", async (req, res) => {
 
         // Check for duplicates in the database
         const duplicateCheck = await pool.query(
-          "SELECT * FROM telnet WHERE ip_address = $1",
+          "SELECT * FROM server WHERE ip_address = $1",
           [item.ip_address]
         );
 
@@ -510,75 +510,75 @@ app.post("/server/import", async (req, res) => {
         // Insert into the 'server' table
         await pool.query(
           `INSERT INTO server (
-    rack,
-    seq,
-    type,
-    active,
-    asset_category,
-    asset_number,
-    asset_tag_number,
-    site,
-    location,
-    "user",
-    job_title,
-    bu,
-    domain,
-    deposit_cyberark,
-    server_ownership,
-    application_owner,
-    system_owner,
-    business_unit,
-    add_in_solarwinds,
-    server_role,
-    brand,
-    mac_address,
-    host_name,
-    ip_address,
-    ilo,
-    model,
-    serial_no,
-    physical_virtual,
-    power_supply_model,
-    eosl_date,
-    planned_refresh_date,
-    eosl_status,
-    cip,
-    date_purchased,
-    power_supply_model_description,
-    power_consumption,
-    btu_hour,
-    po_renewal_maintenance_contract,
-    po_purchase_material,
-    cost_local_currency,
-    indicate_which_currency,
-    cost_usd,
-    utilization_storage,
-    criticality_rating,
-    dr_enable,
-    warranty_start_date,
-    end_date,
-    date_disposed,
-    core_each_processor,
-    number_of_physical_processor,
-    total_core,
-    cpu,
-    ram,
-    hard_disk,
-    part_number_harddisk,
-    usb_disabled,
-    cd_dvd,
-    os_version,
-    remarks,
-    ms_office_version,
-    druva,
-    ip_guard,
-    fde
-  ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, 
-    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, 
-    $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, 
-    $57, $58, $59, $60, $61, $62, $63
-  ) RETURNING *`,
+            rack,
+            seq,
+            type,
+            active,
+            asset_category,
+            asset_number,
+            asset_tag_number,
+            site,
+            location,
+            "user",
+            job_title,
+            bu,
+            domain,
+            deposit_cyberark,
+            server_ownership,
+            application_owner,
+            system_owner,
+            business_unit,
+            add_in_solarwinds,
+            server_role,
+            brand,
+            mac_address,
+            host_name,
+            ip_address,
+            ilo,
+            model,
+            serial_no,
+            physical_virtual,
+            power_supply_model,
+            eosl_date,
+            planned_refresh_date,
+            eosl_status,
+            cip,
+            date_purchased,
+            power_supply_model_description,
+            power_consumption,
+            btu_hour,
+            po_renewal_maintenance_contract,
+            po_purchase_material,
+            cost_local_currency,
+            indicate_which_currency,
+            cost_usd,
+            utilization_storage,
+            criticality_rating,
+            dr_enable,
+            warranty_start_date,
+            end_date,
+            date_disposed,
+            core_each_processor,
+            number_of_physical_processor,
+            total_core,
+            cpu,
+            ram,
+            hard_disk,
+            part_number_harddisk,
+            usb_disabled,
+            cd_dvd,
+            os_version,
+            remarks,
+            ms_office_version,
+            druva,
+            ip_guard,
+            fde
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, 
+            $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, 
+            $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, 
+            $57, $58, $59, $60, $61, $62, $63
+          ) RETURNING *`,
           [
             item.rack,
             item.seq,
@@ -657,7 +657,10 @@ app.post("/server/import", async (req, res) => {
     if (duplicates.length > 0) {
       return res
         .status(400)
-        .json({ message: "Duplicate data found", duplicates });
+        .json({ 
+          message: "Duplicate data found during import. Please check the following entries:", 
+          duplicates 
+        });
     }
 
     res.json({ message: "Data imported successfully" });
@@ -670,7 +673,6 @@ app.post("/server/import", async (req, res) => {
     });
   }
 });
-
 // CRUD Endpoints for Microsoft
 app.post("/microsoft", async (req, res) => {
   const {
@@ -1479,6 +1481,65 @@ app.delete("/server/:id", async (req, res) => {
 });
 
 //crud vendor repair
+
+app.post('/vendor-repair', async (req, res) => {
+  const {
+    repair_date,
+    ticket_number,
+    engineer_name,
+    username,
+    bu_name,
+    material_name,
+    brand,
+    type,
+    serial_number,
+    cost_center,
+    pr_number,
+    po_number,
+    quotation_date,
+    cost_without,
+    status,
+    vendor_delivery_date,
+    remarks,
+  } = req.body;
+
+  // Validasi input
+  if (!ticket_number || !repair_date) {
+    return res.status(400).json({ message: "Ticket number and repair date are required." });
+  }
+
+  try {
+    const newVendorRepair = await pool.query(
+      "INSERT INTO vendor_repair (repair_date, ticket_number, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery_date, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *",
+      [
+        repair_date,
+        ticket_number,
+        engineer_name,
+        username,
+        bu_name,
+        material_name,
+        brand,
+        type,
+        serial_number,
+        cost_center,
+        pr_number,
+        po_number,
+        quotation_date,
+        cost_without,
+        status,
+        vendor_delivery_date,
+        remarks,
+      ]
+    );
+
+    res.status(201).json(newVendorRepair.rows[0]);
+  } catch (err) {
+    console.error("Error saving vendor repair data:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 app.get("/vendor-repair", async (req, res) => {
   try {
     const allVendorRepair = await pool.query("SELECT * FROM vendor_repair");
@@ -1494,7 +1555,6 @@ app.put("/vendor-repair/:id", async (req, res) => {
   const {
     repair_date,
     ticket_number,
-    ageing,
     engineer_name,
     username,
     bu_name,
@@ -1508,19 +1568,16 @@ app.put("/vendor-repair/:id", async (req, res) => {
     quotation_date,
     cost_without,
     status,
-    vendor_delivery,
-    date,
-    created_by_ses,
-    remarks, // Perbaiki typo dari 'remaks' menjadi 'remarks'
+    vendor_delivery_date,
+    remarks,
   } = req.body;
 
   try {
     const updateVendorRepair = await pool.query(
-      "UPDATE vendor_repair SET repair_date = $1, ticket_number = $2, ageing = $3, engineer_name = $4, username = $5, bu_name = $6, material_name = $7, brand = $8, type = $9, serial_number = $10, cost_center = $11, pr_number = $12, po_number = $13, quotation_date = $14, cost_without = $15, status = $16, vendor_delivery = $17, date = $18, created_by_ses = $19, remarks = $20 WHERE id = $21 RETURNING *",
+      "UPDATE vendor_repair SET repair_date = $1, ticket_number = $2, engineer_name = $3, username = $4, bu_name = $5, material_name = $6, brand = $7, type = $8, serial_number = $9, cost_center = $10, pr_number = $11, po_number = $12, quotation_date = $13, cost_without = $14, status = $15, vendor_delivery = $16, vendor_delivery_date = $17, remarks = $18 WHERE id = $19 RETURNING *",
       [
         repair_date,
         ticket_number,
-        ageing,
         engineer_name,
         username,
         bu_name,
@@ -1534,10 +1591,8 @@ app.put("/vendor-repair/:id", async (req, res) => {
         quotation_date,
         cost_without,
         status,
-        vendor_delivery,
-        date,
-        created_by_ses,
-        remarks, // Perbaiki typo dari 'remaks' menjadi 'remarks'
+        vendor_delivery_date,
+        remarks, 
         id,
       ]
     );
@@ -1608,11 +1663,10 @@ app.post("/vendor-repair/import", async (req, res) => {
         ticketNumbers.add(item.ticket_number);
 
         await pool.query(
-          "INSERT INTO vendor_repair (repair_date, ticket_number, ageing, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery, date, created_by_ses, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)",
+          "INSERT INTO vendor_repair (repair_date, ticket_number, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery_date, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,)",
           [
             item.repair_date,
             item.ticket_number,
-            item.ageing,
             item.engineer_name,
             item.username,
             item.bu_name,
@@ -1626,9 +1680,7 @@ app.post("/vendor-repair/import", async (req, res) => {
             item.quotation_date,
             item.cost_without,
             item.status,
-            item.vendor_delivery,
-            item.date,
-            item.created_by_ses,
+            item.vendor_delivery_date,
             item.remarks,
           ]
         );

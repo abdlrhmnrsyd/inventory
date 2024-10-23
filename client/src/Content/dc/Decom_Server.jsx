@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
-import { Info, Database, Monitor, Server, Network, Briefcase, FolderTree, BookOpen, BarChartHorizontal, Folder } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Info,
+  Database,
+  Monitor,
+  Server,
+  Network,
+  Briefcase,
+  FolderTree,
+  BookOpen,
+  BarChartHorizontal,
+  Folder,
+} from "lucide-react";
 import Sidebar, { SidebarItem } from "../../components/Sidebar";
 import { Link } from "react-router-dom";
-import MenuItem from "../../components/MenuItem";
 
 function DecomServerComponent() {
   return (
@@ -38,7 +48,10 @@ function DecomServerComponent() {
           </Link>
 
           <Link to="/SurveyFeedbackAveris">
-            <SidebarItem icon={<BarChartHorizontal size={20} />} text="Survey Feedback Averis" />
+            <SidebarItem
+              icon={<BarChartHorizontal size={20} />}
+              text="Survey Feedback Averis"
+            />
           </Link>
 
           <Link to="/OtherDocuments">
@@ -54,10 +67,7 @@ function DecomServerComponent() {
 
         <div className="flex-1 p-6 main-content">
           {/* Integrasi MenuItem yang berisi Dropdown */}
-          <nav className="flex flex-wrap items-center justify-between p-4 bg-gray-800">
-            <MenuItem />
-          </nav>
-
+          <h1>hello</h1>
           {/* Konten lainnya di halaman ini */}
         </div>
       </div>
