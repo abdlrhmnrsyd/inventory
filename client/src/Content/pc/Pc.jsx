@@ -16,6 +16,7 @@ import {
   Trash2,
   ChevronLeft, // Import ChevronLeft
   ChevronRight, // Import ChevronRight
+  FileText,
 } from "lucide-react";
 import Sidebar, { SidebarItem } from "../../components/Sidebar";
 import { Link, useNavigate } from "react-router-dom";
@@ -401,6 +402,12 @@ const PcComponent = () => {
   const toggleImportForm = () => {
     setImportFormVisible(!isImportFormVisible);
   };
+
+  const [isReportFormVisible, setReportFormVisible] = useState(false);
+  const toggleReportForm = () => {
+    setReportFormVisible(!isReportFormVisible);
+  };
+  
   return (
     <>
       <div className="flex">
@@ -522,6 +529,12 @@ const PcComponent = () => {
                     className="px-4 py-2 text-white transition duration-200 ease-in-out bg-green-500 rounded-md hover:bg-green-700"
                   >
                     Import Excel
+                  </button>
+                  <button
+                    onClick={toggleReportForm}
+                    className="p-2 rounded-md hover:bg-gray-200"
+                  >
+                    <FileText size={20} />
                   </button>
                 </div>
               </div>
@@ -892,6 +905,23 @@ const PcComponent = () => {
                 >
                   <ChevronRight size={18} />
                 </button>
+
+                {isReportFormVisible && ( // Render the report form when visible
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
+      <h2 className="mb-4 text-xl font-semibold text-center">Report Information</h2>
+      <p>This page allows you to manage vendor repairs. You can add, edit, delete, and import vendor repair records.</p>
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={toggleReportForm}
+          className="px-4 py-2 text-red-500 hover:text-red-600"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
               </div>
             </div>
           </div>

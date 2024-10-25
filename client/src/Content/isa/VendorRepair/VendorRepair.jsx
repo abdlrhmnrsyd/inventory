@@ -17,6 +17,7 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 import Sidebar, { SidebarItem } from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
@@ -146,13 +147,16 @@ const VendorRepairComponent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const isDuplicateTicketNumber = vendorRepair.some(
-      (repair) => repair.ticket_number === form.ticket_number && repair.id !== form.id
+      (repair) =>
+        repair.ticket_number === form.ticket_number && repair.id !== form.id
     );
-  
+
     if (isDuplicateTicketNumber) {
-      showAlert("Ticket Number already exists. Please enter a unique Ticket Number.");
+      showAlert(
+        "Ticket Number already exists. Please enter a unique Ticket Number."
+      );
       return;
     }
 
@@ -285,14 +289,18 @@ const VendorRepairComponent = () => {
 
       // Check for duplicate ticket numbers in the imported data
       const importedTicketNumbers = jsonData.map((item) => item.ticket_number);
-      const existingTicketNumbers = vendorRepair.map((item) => item.ticket_number);
-      const duplicateTicketNumbers = importedTicketNumbers.filter((ticketNumber) =>
-        existingTicketNumbers.includes(ticketNumber)
+      const existingTicketNumbers = vendorRepair.map(
+        (item) => item.ticket_number
+      );
+      const duplicateTicketNumbers = importedTicketNumbers.filter(
+        (ticketNumber) => existingTicketNumbers.includes(ticketNumber)
       );
 
       if (duplicateTicketNumbers.length > 0) {
         showAlert(
-          `Duplicate Ticket Numbers found: ${duplicateTicketNumbers.join(", ")}. Please ensure all Ticket Numbers are unique.`,
+          `Duplicate Ticket Numbers found: ${duplicateTicketNumbers.join(
+            ", "
+          )}. Please ensure all Ticket Numbers are unique.`,
           "error"
         );
         return;
@@ -420,6 +428,11 @@ const VendorRepairComponent = () => {
     return differenceInDays >= 0 ? differenceInDays : 0; // Return 0 if negative
   };
 
+  const [isReportFormVisible, setReportFormVisible] = useState(false);
+  const toggleReportForm = () => {
+    setReportFormVisible(!isReportFormVisible);
+  };
+
   return (
     <>
       <div className="flex">
@@ -534,6 +547,12 @@ const VendorRepairComponent = () => {
                   >
                     Import Excel
                   </button>
+                  <button
+                    onClick={toggleReportForm}
+                    className="p-2 rounded-md hover:bg-gray-200"
+                  >
+                    <FileText size={20} />
+                  </button>
                 </div>
               </div>
 
@@ -589,7 +608,13 @@ const VendorRepairComponent = () => {
                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{formatDate(repair.repair_date)}</TableCell>
                         <TableCell>{repair.ticket_number}</TableCell>
-                        <TableCell>{calculateAgeing(repair.repair_date, repair.vendor_delivery_date)} days</TableCell>
+                        <TableCell>
+                          {calculateAgeing(
+                            repair.repair_date,
+                            repair.vendor_delivery_date
+                          )}{" "}
+                          days
+                        </TableCell>
                         <TableCell>{repair.engineer_name}</TableCell>
                         <TableCell>{repair.username}</TableCell>
                         <TableCell>{repair.bu_name}</TableCell>
@@ -605,7 +630,9 @@ const VendorRepairComponent = () => {
                         </TableCell>
                         <TableCell>{repair.cost_without}</TableCell>
                         <TableCell>{repair.status}</TableCell>
-                        <TableCell>{formatDate(repair.vendor_delivery_date)}</TableCell>
+                        <TableCell>
+                          {formatDate(repair.vendor_delivery_date)}
+                        </TableCell>
                         <TableCell>{repair.remarks}</TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center space-x-1">
@@ -912,6 +939,24 @@ const VendorRepairComponent = () => {
                   </div>
                 </div>
               )}
+
+              
+{isReportFormVisible && ( // Render the report form when visible
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
+      <h2 className="mb-4 text-xl font-semibold text-center">Report Information</h2>
+      <p>This page allows you to manage vendor repairs. You can add, edit, delete, and import vendor repair records.</p>
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={toggleReportForm}
+          className="px-4 py-2 text-red-500 hover:text-red-600"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
             </div>
           </div>
         </div>
