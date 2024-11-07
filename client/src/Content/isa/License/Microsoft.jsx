@@ -174,52 +174,116 @@ const MicrosoftComponent = () => {
       return newForm;
     });
   };
-
+  
+  const [inputErrors, setInputErrors] = useState({});
   const handleSubmit = async (e) => {
     e.preventDefault();
+    let haserror = false;
+    
+    const requiredFields = [
+      "company_name",
+      "products_name",
+      "account",
+      "sku_number",
+      "department",
+      "user_name",
+      "version",
+      "type_license",
+      "qty",
+      "effective_date",
+      "expired_date",
+      "po",
+      "vendor_name",
+      "email_vendor",
+    ];
+
+    const emptyFields = requiredFields.filter(field => !form[field]);
+    if (emptyFields.length > 0) {
+      const errors = {};
+      const errorMessages = []; // Array untuk menyimpan pesan kesalahan
+
+      emptyFields.forEach(field => {
+        errors[field] = true; // Set error for each empty field
+        errorMessages.push(`${field.replace(/_/g, ' ')} is required.`); // Tambahkan pesan kesalahan ke array
+      });
+
+      setInputErrors(errors); // Update input errors state
+      showAlert(errorMessages.join('\n'), "warning"); // Tampilkan semua pesan kesalahan dalam satu alert
+      return;
+    }
+
+    
     if (
-      !form.area ||
-      !form.role ||
-      !form.ip_address ||
-      !form.hostname ||
-      !form.brand ||
-      !form.device_type ||
-      !form.serial_number ||
-      !form.source_date
+      !form.company_name ||
+      !form.products_name ||
+      !form.account ||
+      !form.sku_number ||
+      !form.department ||
+      !form.user_name ||
+      !form.version ||
+      !form.type_license ||
+      !form.qty ||
+      !form.effective_date ||
+      !form.expired_date ||
+      !form.po ||
+      !form.vendor_name ||
+      !form.email_vendor
     ) {
       showAlert("Please fill in all fields before submitting.", true);
       return;
     }
   
     try {
+      let response;
       if (form.id) {
-        await axios.put(`http://localhost:3001/telnet/${form.id}`, form);
-        showAlert("Telnet entry updated successfully!");
-        setIsEditSuccess(true);
-        setTimeout(() => setIsEditSuccess(false), 3000);
+        // Update existing entry
+        response = await axios.put(`http://localhost:3001/microsoft/${form.id}`, form);
+        showAlert("License entry updated successfully!");
       } else {
-        await axios.post("http://localhost:3001/telnet", form);
-        showAlert("Telnet entry added successfully!");
+        // Create new entry
+        response = await axios.post("http://localhost:3001/microsoft", form);
+        showAlert("License entry added successfully!");
       }
+
+      // Update state with the new data
+      setMicrosoft((prevMicrosoft) => {
+        // If updating, replace the old entry; if adding, append the new entry
+        if (form.id) {
+          return prevMicrosoft.map((item) => (item.id === form.id ? response.data : item));
+        } else {
+          return [...prevMicrosoft, response.data];
+        }
+      });
+
+      // Reset form
       setForm({
         id: "",
-        area: "",
-        role: "",
-        ip_address: "",
-        hostname: "",
-        brand: "",
-        device_type: "",
-        serial_number: "",
-        source_date: "",
+        company_name: "",
+        department: "",
+        user_name: "",
+        account: "",
+        products_name: "",
+        sku_number: "",
+        version: "",
+        type_license: "",
+        contact_number: "",
+        qty: "",
+        effective_date: "",
+        expired_date: "",
+        po: "",
+        vendor_name: "",
+        email_vendor: "",
       });
-      fetchTelnet(); // Function to refresh telnet data
+
+      // Close the form
       setFormVisible(false);
-      setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 3000);
     } catch (err) {
       console.error(err.message);
     }
-  };
+
+  
+    
+};
   
   const handleEdit = (microsoft) => {
     // Convert date strings to the format expected by input type="date"
@@ -626,7 +690,7 @@ const MicrosoftComponent = () => {
                       <select
                         id="company_name"
                         name="company_name"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.company_name ? 'border-red-500' : ''}`}
                         value={form.company_name}
                         onChange={handleInputChange}
                       >
@@ -662,7 +726,7 @@ const MicrosoftComponent = () => {
                       <select
                         id="products_name"
                         name="products_name"
-                        className="w-full h-12 p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.products_name ? 'border-red-500' : ''}`}
                         value={form.products_name}
                         onChange={handleInputChange}
                       >
@@ -705,7 +769,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="account"
                         name="account"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.account ? 'border-red-500' : ''}`}
                         value={form.account}
                         onChange={handleInputChange}
                       />
@@ -721,7 +785,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="sku_number"
                         name="sku_number"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.sku_number ? 'border-red-500' : ''}`}
                         value={form.sku_number}
                         onChange={handleInputChange}
                       />
@@ -737,7 +801,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="department"
                         name="department"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.department ? 'border-red-500' : ''}`}
                         value={form.department}
                         onChange={handleInputChange}
                       />
@@ -757,7 +821,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="user_name"
                         name="user_name"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.user_name ? 'border-red-500' : ''}`}
                         value={form.user_name}
                         onChange={handleInputChange}
                       />
@@ -773,7 +837,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="version"
                         name="version"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.version ? 'border-red-500' : ''}`}
                         value={form.version}
                         onChange={handleInputChange}
                       />
@@ -788,7 +852,7 @@ const MicrosoftComponent = () => {
                       <select
                         id="type_license"
                         name="type_license"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.type_license ? 'border-red-500' : ''}`}
                         value={form.type_license}
                         onChange={handleInputChange}
                       >
@@ -824,7 +888,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="qty"
                         name="qty"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.qty ? 'border-red-500' : ''}`}
                         value={form.qty}
                         onChange={handleInputChange}
                       />
@@ -844,7 +908,7 @@ const MicrosoftComponent = () => {
                         type="date"
                         id="effective_date"
                         name="effective_date"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.effective_date ? 'border-red-500' : ''}`}
                         value={form.effective_date}
                         onChange={handleInputChange}
                       />
@@ -860,7 +924,7 @@ const MicrosoftComponent = () => {
                         type="date"
                         id="expired_date"
                         name="expired_date"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.expired_date ? 'border-red-500' : ''}`}
                         value={form.expired_date}
                         onChange={handleInputChange}
                       />
@@ -876,7 +940,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="po"
                         name="po"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.po ? 'border-red-500' : ''}`}
                         value={form.po}
                         onChange={handleInputChange}
                       />
@@ -892,7 +956,7 @@ const MicrosoftComponent = () => {
                         type="text"
                         id="vendor_name"
                         name="vendor_name"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.vendor_name ? 'border-red-500' : ''}`}
                         value={form.vendor_name}
                         onChange={handleInputChange}
                       />
@@ -908,7 +972,7 @@ const MicrosoftComponent = () => {
                         type="email"
                         id="email_vendor"
                         name="email_vendor"
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.email_vendor ? 'border-red-500' : ''}`}
                         value={form.email_vendor}
                         onChange={handleInputChange}
                       />

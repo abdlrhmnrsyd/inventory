@@ -467,7 +467,6 @@ app.post("/telnet/import", async (req, res) => {
   }
 });
 
-
 // Import Excel server
 app.post("/server/import", async (req, res) => {
   console.log("Received data:", JSON.stringify(req.body, null, 2));
@@ -655,12 +654,11 @@ app.post("/server/import", async (req, res) => {
     }
 
     if (duplicates.length > 0) {
-      return res
-        .status(400)
-        .json({ 
-          message: "Duplicate data found during import. Please check the following entries:", 
-          duplicates 
-        });
+      return res.status(400).json({
+        message:
+          "Duplicate data found during import. Please check the following entries:",
+        duplicates,
+      });
     }
 
     res.json({ message: "Data imported successfully" });
@@ -1482,7 +1480,7 @@ app.delete("/server/:id", async (req, res) => {
 
 //crud vendor repair
 
-app.post('/vendor-repair', async (req, res) => {
+app.post("/vendor-repair", async (req, res) => {
   const {
     repair_date,
     ticket_number,
@@ -1505,7 +1503,9 @@ app.post('/vendor-repair', async (req, res) => {
 
   // Validasi input
   if (!ticket_number || !repair_date) {
-    return res.status(400).json({ message: "Ticket number and repair date are required." });
+    return res
+      .status(400)
+      .json({ message: "Ticket number and repair date are required." });
   }
 
   try {
@@ -1538,7 +1538,6 @@ app.post('/vendor-repair', async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 app.get("/vendor-repair", async (req, res) => {
   try {
@@ -1574,7 +1573,7 @@ app.put("/vendor-repair/:id", async (req, res) => {
 
   try {
     const updateVendorRepair = await pool.query(
-      "UPDATE vendor_repair SET repair_date = $1, ticket_number = $2, engineer_name = $3, username = $4, bu_name = $5, material_name = $6, brand = $7, type = $8, serial_number = $9, cost_center = $10, pr_number = $11, po_number = $12, quotation_date = $13, cost_without = $14, status = $15, vendor_delivery = $16, vendor_delivery_date = $17, remarks = $18 WHERE id = $19 RETURNING *",
+      "UPDATE vendor_repair SET repair_date = $1, ticket_number = $2, engineer_name = $3, username = $4, bu_name = $5, material_name = $6, brand = $7, type = $8, serial_number = $9, cost_center = $10, pr_number = $11, po_number = $12, quotation_date = $13, cost_without = $14, status = $15, vendor_delivery_date = $16, remarks = $17 WHERE id = $18 RETURNING *",
       [
         repair_date,
         ticket_number,
@@ -1592,7 +1591,7 @@ app.put("/vendor-repair/:id", async (req, res) => {
         cost_without,
         status,
         vendor_delivery_date,
-        remarks, 
+        remarks,
         id,
       ]
     );
@@ -1603,7 +1602,7 @@ app.put("/vendor-repair/:id", async (req, res) => {
 
     res.json(updateVendorRepair.rows[0]);
   } catch (err) {
-    console.error("Error updating data:", err.message); // Tambahkan logging untuk kesalahan
+    console.error("Error updating data:", err.message); 
     res.status(500).send("Server error");
   }
 });
@@ -1663,7 +1662,7 @@ app.post("/vendor-repair/import", async (req, res) => {
         ticketNumbers.add(item.ticket_number);
 
         await pool.query(
-          "INSERT INTO vendor_repair (repair_date, ticket_number, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery_date, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,)",
+          "INSERT INTO vendor_repair (repair_date, ticket_number, engineer_name, username, bu_name, material_name, brand, type, serial_number, cost_center, pr_number, po_number, quotation_date, cost_without, status, vendor_delivery_date, remarks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)",
           [
             item.repair_date,
             item.ticket_number,
@@ -1680,7 +1679,8 @@ app.post("/vendor-repair/import", async (req, res) => {
             item.quotation_date,
             item.cost_without,
             item.status,
-            item.vendor_delivery_date,
+            new Date(item.vendor_delivery_date).toISOString(), // Convert to ISO date format if necessary
+
             item.remarks,
           ]
         );

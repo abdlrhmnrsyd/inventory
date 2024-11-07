@@ -131,7 +131,7 @@ const VendorRepairComponent = () => {
 
     if (name === "ticket_number") {
       const isDuplicateTicketNumber = vendorRepair.some(
-        (repair) => repair.ticket_number === value
+        (repair) => repair.ticket_number.toLowerCase() === value.toLowerCase() // Perbandingan tanpa memperhatikan huruf besar/kecil
       );
       if (isDuplicateTicketNumber) {
         setError(
@@ -145,8 +145,46 @@ const VendorRepairComponent = () => {
     }
   };
 
+  const [inputErrors, setInputErrors] = useState({});
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const requiredFields = [
+      "repair_date",
+      "ticket_number",
+      "engineer_name",
+      "username",
+      "bu_name",
+      "material_name",
+      "brand",
+      "type",
+      "serial_number",
+      "cost_center",
+      "quotation_date",
+      "cost_without",
+      "status",
+      "vendor_delivery_date",
+    ];
+
+    const emptyFields = requiredFields.filter(field => !form[field]);
+
+    if (emptyFields.length > 0) {
+      const errors = {};
+      const errorMessages = []; // Array untuk menyimpan pesan kesalahan
+
+      emptyFields.forEach(field => {
+        errors[field] = true; // Set error for each empty field
+        errorMessages.push(`${field.replace(/_/g, ' ')} is required.`); // Tambahkan pesan kesalahan ke array
+      });
+
+      setInputErrors(errors); // Update input errors state
+      showAlert(errorMessages.join('\n'), "warning"); // Tampilkan semua pesan kesalahan dalam satu alert
+      return;
+    }
+
+    // Reset input errors if all fields are filled
+    setInputErrors({});
 
     const isDuplicateTicketNumber = vendorRepair.some(
       (repair) =>
@@ -171,13 +209,10 @@ const VendorRepairComponent = () => {
       !form.type ||
       !form.serial_number ||
       !form.cost_center ||
-      !form.pr_number ||
-      !form.po_number ||
       !form.quotation_date ||
       !form.cost_without ||
       !form.status ||
-      !form.vendor_delivery_date ||
-      !form.remarks
+      !form.vendor_delivery_date
     ) {
       showAlert("Please fill in all fields before submitting.");
       return;
@@ -433,6 +468,16 @@ const VendorRepairComponent = () => {
     setReportFormVisible(!isReportFormVisible);
   };
 
+  const formatCurrency = (value) => {
+    if (!value) return "0";
+    const numberValue = parseInt(value, 10);
+    return numberValue.toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    });
+  };
+
   return (
     <>
       <div className="flex">
@@ -628,7 +673,9 @@ const VendorRepairComponent = () => {
                         <TableCell>
                           {formatDate(repair.quotation_date)}
                         </TableCell>
-                        <TableCell>{repair.cost_without}</TableCell>
+                        <TableCell>
+                          {formatCurrency(repair.cost_without)}
+                        </TableCell>
                         <TableCell>{repair.status}</TableCell>
                         <TableCell>
                           {formatDate(repair.vendor_delivery_date)}
@@ -682,122 +729,142 @@ const VendorRepairComponent = () => {
                       className="grid grid-cols-3 gap-6"
                     >
                       <div className="col-span-1">
-                        <label htmlFor="repair_date">Repair Date</label>
+                        <label htmlFor="repair_date">
+                          Repair Date <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="date"
                           id="repair_date"
                           name="repair_date"
                           value={form.repair_date}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.repair_date ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="ticket_number">Ticket Number</label>
+                        <label htmlFor="ticket_number">
+                          Ticket Number <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="ticket_number"
                           name="ticket_number"
                           value={form.ticket_number}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.ticket_number ? 'border-red-500' : ''}`}
                         />
                         {error && <p className="text-red-500">{error}</p>}
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="engineer_name">Engineer Name</label>
+                        <label htmlFor="engineer_name">
+                          Engineer Name <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="engineer_name"
                           name="engineer_name"
                           value={form.engineer_name}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.engineer_name ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="username">
+                          Username <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="username"
                           name="username"
                           value={form.username}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.username ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="bu_name">BU Name</label>
+                        <label htmlFor="bu_name">
+                          BU Name <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="bu_name"
                           name="bu_name"
                           value={form.bu_name}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.bu_name ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="material_name">Material Name</label>
+                        <label htmlFor="material_name">
+                          Material Name <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="material_name"
                           name="material_name"
                           value={form.material_name}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.material_name ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="brand">Brand</label>
+                        <label htmlFor="brand">
+                          Brand <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="brand"
                           name="brand"
                           value={form.brand}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.brand ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="type">Type</label>
+                        <label htmlFor="type">
+                          Type <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="type"
                           name="type"
                           value={form.type}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.type ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="serial_number">Serial Number</label>
+                        <label htmlFor="serial_number">
+                          Serial Number <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="serial_number"
                           name="serial_number"
                           value={form.serial_number}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.serial_number ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="cost_center">Cost Center</label>
+                        <label htmlFor="cost_center">
+                          Cost Center <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="text"
                           id="cost_center"
                           name="cost_center"
                           value={form.cost_center}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.cost_center ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
@@ -809,7 +876,7 @@ const VendorRepairComponent = () => {
                           name="pr_number"
                           value={form.pr_number}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.pr_number ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
@@ -821,42 +888,49 @@ const VendorRepairComponent = () => {
                           name="po_number"
                           value={form.po_number}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.po_number ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="quotation_date">Quotation Date</label>
+                        <label htmlFor="quotation_date">
+                          Quotation Date <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="date"
                           id="quotation_date"
                           name="quotation_date"
                           value={form.quotation_date}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.quotation_date ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="cost_without">Cost Without</label>
+                        <label htmlFor="cost_without">
+                          Cost Without PPN (IDR){" "}
+                          <span className="text-red-500">*</span>
+                        </label>
                         <input
-                          type="text"
+                          type="number"
                           id="cost_without"
                           name="cost_without"
                           value={form.cost_without}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.cost_without ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="status">Status</label>
+                        <label htmlFor="status">
+                          Status <span className="text-red-500">*</span>
+                        </label>
                         <select
                           id="status"
                           name="status"
                           value={form.status}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.status ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         >
                           <option>Select Status</option>
@@ -866,14 +940,17 @@ const VendorRepairComponent = () => {
                         </select>
                       </div>
                       <div className="col-span-1">
-                        <label htmlFor="date">Vendor Delivery Date</label>
+                        <label htmlFor="date">
+                          Vendor Delivery Date{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
                         <input
                           type="date"
                           id="vendor_delivery_date"
                           name="vendor_delivery_date"
                           value={form.vendor_delivery_date}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.vendor_delivery_date ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
@@ -885,7 +962,7 @@ const VendorRepairComponent = () => {
                           name="remarks"
                           value={form.remarks}
                           onChange={handleInputChange}
-                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md ${inputErrors.remarks ? 'border-red-500' : ''}`}
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
@@ -940,23 +1017,27 @@ const VendorRepairComponent = () => {
                 </div>
               )}
 
-              
-{isReportFormVisible && ( // Render the report form when visible
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
-      <h2 className="mb-4 text-xl font-semibold text-center">Report Information</h2>
-      <p>This page allows you to manage vendor repairs. You can add, edit, delete, and import vendor repair records.</p>
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={toggleReportForm}
-          className="px-4 py-2 text-red-500 hover:text-red-600"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              {isReportFormVisible && ( // Render the report form when visible
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
+                    <h2 className="mb-4 text-xl font-semibold text-center">
+                      Report Information
+                    </h2>
+                    <p>
+                      This page allows you to manage vendor repairs. You can
+                      add, edit, delete, and import vendor repair records.
+                    </p>
+                    <div className="flex justify-end mt-4">
+                      <button
+                        onClick={toggleReportForm}
+                        className="px-4 py-2 text-red-500 hover:text-red-600"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

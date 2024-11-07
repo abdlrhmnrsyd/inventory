@@ -296,7 +296,7 @@ const [isDisabled, setIsDisabled] = useState(false);
   };
 
   const filteredServers = servers.filter((server) => {
-    console.log("Filtering server:", server); // Log setiap server yang difilter
+    console.log("Filtering server:", server); 
     return (
       (server.type &&
         server.type.toLowerCase().includes(searchTerm.toLowerCase())) ||

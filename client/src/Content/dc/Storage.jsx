@@ -29,7 +29,6 @@ function StorageComponent() {
 
   const toggleDropdown = (name) => {
     setDropdownVisible((prev) => {
-      // Reset all dropdowns to false, then toggle the selected one
       const newDropdownState = Object.keys(prev).reduce((acc, key) => {
         acc[key] = key === name ? !prev[key] : false;
         return acc;
