@@ -39,22 +39,22 @@ function ServerComponent() {
   const [isEditSuccess, setIsEditSuccess] = useState(false);
   const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
-  const [duplicateFields, setDuplicateFields] = useState({ // State untuk menandai field duplikat
+  const [duplicateFields, setDuplicateFields] = useState({
+    // State untuk menandai field duplikat
     mac_address: false,
     ip_address: false,
     asset_tag_number: false,
-});
-const [errorMessages, setErrorMessages] = useState({ // State untuk menyimpan pesan kesalahan
-  mac_address: "",
-  ip_address: "",
-  asset_tag_number: "",
-});
-const [isDisabled, setIsDisabled] = useState(false);
-  
+  });
+  const [errorMessages, setErrorMessages] = useState({
+    // State untuk menyimpan pesan kesalahan
+    mac_address: "",
+    ip_address: "",
+    asset_tag_number: "",
+  });
+  const [isDisabled, setIsDisabled] = useState(false);
 
   const [isFormVisible, setIsFormVisible] = useState(false); // State untuk form visibility
   const [searchField, setSearchField] = useState(""); // State for search field
-  const [isSearchVisible, setIsSearchVisible] = useState(false); // State untuk mengontrol visibilitas input pencarian
   const [form, setForm] = useState({
     // State for form data
     rack: "",
@@ -128,31 +128,44 @@ const [isDisabled, setIsDisabled] = useState(false);
     setIsFormVisible(true); // Show the form
   };
 
-  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
 
     // Cek apakah ada duplikat pada mac_address, ip_address, atau asset_tag_number
-    const newDuplicateFields = { mac_address: false, ip_address: false, asset_tag_number: false };
-    const newErrorMessages = { mac_address: "", ip_address: "", asset_tag_number: "" };
+    const newDuplicateFields = {
+      mac_address: false,
+      ip_address: false,
+      asset_tag_number: false,
+    };
+    const newErrorMessages = {
+      mac_address: "",
+      ip_address: "",
+      asset_tag_number: "",
+    };
 
     // Cek duplikat
     if (name === "mac_address") {
-        newDuplicateFields.mac_address = servers.some(server => server.mac_address === value);
-        if (newDuplicateFields.mac_address) {
-            newErrorMessages.mac_address = "already";
-        }
+      newDuplicateFields.mac_address = servers.some(
+        (server) => server.mac_address === value
+      );
+      if (newDuplicateFields.mac_address) {
+        newErrorMessages.mac_address = "already";
+      }
     } else if (name === "ip_address") {
-        newDuplicateFields.ip_address = servers.some(server => server.ip_address === value);
-        if (newDuplicateFields.ip_address) {
-            newErrorMessages.ip_address = "already";
-        }
+      newDuplicateFields.ip_address = servers.some(
+        (server) => server.ip_address === value
+      );
+      if (newDuplicateFields.ip_address) {
+        newErrorMessages.ip_address = "already";
+      }
     } else if (name === "asset_tag_number") {
-        newDuplicateFields.asset_tag_number = servers.some(server => server.asset_tag_number === value);
-        if (newDuplicateFields.asset_tag_number) {
-            newErrorMessages.asset_tag_number = "already";
-        }
+      newDuplicateFields.asset_tag_number = servers.some(
+        (server) => server.asset_tag_number === value
+      );
+      if (newDuplicateFields.asset_tag_number) {
+        newErrorMessages.asset_tag_number = "already";
+      }
     }
 
     // Set duplicate fields state
@@ -161,23 +174,20 @@ const [isDisabled, setIsDisabled] = useState(false);
 
     // Jika ada duplikat, tampilkan alert dan disable input lainnya
     if (newDuplicateFields[name]) {
-        
-        setIsDisabled(true); // Disable semua input
-        // Kosongkan input lainnya
-        const newForm = { ...form };
-        Object.keys(newForm).forEach(key => {
-            if (key !== name) {
-                newForm[key] = ""; // Clear other fields
-            }
-        });
-        setForm(newForm);
+      setIsDisabled(true); // Disable semua input
+      // Kosongkan input lainnya
+      const newForm = { ...form };
+      Object.keys(newForm).forEach((key) => {
+        if (key !== name) {
+          newForm[key] = ""; // Clear other fields
+        }
+      });
+      setForm(newForm);
     } else {
-        // Jika tidak ada duplikat, aktifkan kembali input
-        setIsDisabled(false);
+      // Jika tidak ada duplikat, aktifkan kembali input
+      setIsDisabled(false);
     }
-};
-
-
+  };
 
   const handleEdit = (server) => {
     setForm(server); // Mengisi form dengan data server yang dipilih
@@ -296,7 +306,7 @@ const [isDisabled, setIsDisabled] = useState(false);
   };
 
   const filteredServers = servers.filter((server) => {
-    console.log("Filtering server:", server); 
+    console.log("Filtering server:", server);
     return (
       (server.type &&
         server.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -374,7 +384,7 @@ const [isDisabled, setIsDisabled] = useState(false);
       showAlert("No file selected", true);
       return;
     }
-  
+
     const result = await Swal.fire({
       title: "Confirm Upload",
       text: `Are you sure you want to upload the file: ${file.name}?`,
@@ -383,7 +393,7 @@ const [isDisabled, setIsDisabled] = useState(false);
       confirmButtonText: "Yes, upload it!",
       cancelButtonText: "Cancel",
     });
-  
+
     if (result.isConfirmed) {
       const reader = new FileReader();
       reader.onload = async (event) => {
@@ -393,27 +403,37 @@ const [isDisabled, setIsDisabled] = useState(false);
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           const data = XLSX.utils.sheet_to_json(worksheet);
-  
-          const response = await axios.post("http://localhost:3001/server/import", data);
+
+          const response = await axios.post(
+            "http://localhost:3001/server/import",
+            data
+          );
           showAlert("Data imported successfully!");
           fetchServers();
           setUploadVisible(false);
         } catch (error) {
           console.error("Error importing data:", error);
           // Check if the error response contains a message
-          if (error.response && error.response.data && error.response.data.message) {
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.message
+          ) {
             showAlert(error.response.data.message, true); // Show the specific error message
           } else {
-            showAlert("Error importing data: Please check the console for details.", true);
+            showAlert(
+              "Error importing data: Please check the console for details.",
+              true
+            );
           }
         }
       };
-  
+
       reader.onerror = (error) => {
         console.error("Error reading file:", error);
         showAlert("Error reading file. Please try again.", true);
       };
-  
+
       reader.readAsBinaryString(file);
     }
   };
@@ -467,23 +487,28 @@ const [isDisabled, setIsDisabled] = useState(false);
   const [searchFieldTerm, setSearchFieldTerm] = useState(""); // State for search field term
 
   const handleFieldSearch = (e) => {
-    setSearchFieldTerm(e.target.value.toLowerCase());
-    const fields = document.querySelectorAll("input, select");
+    const term = e.target.value.toLowerCase(); // Get the search term from the input
+    setSearchFieldTerm(term); // Update the state with the search term
+    const fields = document.querySelectorAll("input, select"); // Select all input and select fields
+
+    if (term === "") {
+      // If the search term is empty, remove highlights from all fields
+      fields.forEach((field) => {
+        field.classList.remove("bg-yellow-100"); // Remove highlight
+      });
+      return; // Exit the function early
+    }
+
     fields.forEach((field) => {
-      const label = field.previousElementSibling;
-      if (label && label.textContent.toLowerCase().includes(searchFieldTerm)) {
-        field.scrollIntoView({ behavior: "smooth", block: "center" });
-        field.classList.add("bg-yellow-100");
+      const label = field.previousElementSibling; // Get the label for the current field
+      // Check if the label text includes the search term
+      if (label && label.textContent.toLowerCase().includes(term)) {
+        field.scrollIntoView({ behavior: "smooth", block: "center" }); // Scroll to the field
+        field.classList.add("bg-yellow-100"); // Highlight the field
       } else {
-        field.classList.remove("bg-yellow-100");
+        field.classList.remove("bg-yellow-100"); // Remove highlight if it doesn't match
       }
     });
-  };
-
-  const [isSearchInputVisible, setIsSearchInputVisible] = useState(false); // State to manage search input visibility
-
-  const toggleSearchInput = () => {
-    setIsSearchInputVisible(!isSearchInputVisible); // Toggle search input visibility
   };
 
   const [dropdownVisible, setDropdownVisible] = useState({
@@ -498,7 +523,6 @@ const [isDisabled, setIsDisabled] = useState(false);
     managementRouter: false, // Unique key for router and pmis
   });
 
- 
   const [activeDropdown, setActiveDropdown] = useState("Management"); // State to track active dropdown
 
   // Function to handle dropdown toggle and set active dropdown
@@ -513,6 +537,12 @@ const [isDisabled, setIsDisabled] = useState(false);
   const [isReportFormVisible, setReportFormVisible] = useState(false);
   const toggleReportForm = () => {
     setReportFormVisible(!isReportFormVisible);
+  };
+
+  const [isSearchVisible, setIsSearchVisible] = useState(false); // State to control search visibility
+
+  const toggleSearchVisibility = () => {
+    setIsSearchVisible(!isSearchVisible); // Toggle search visibility
   };
 
   return (
@@ -1202,24 +1232,27 @@ const [isDisabled, setIsDisabled] = useState(false);
             </h2>
             <div className="overflow-y-auto h-96">
               {/* Search input for form fields */}
+
               <div className="flex items-center mb-4">
                 <button
-                  onClick={toggleSearchInput}
-                  className="p-2 text-white bg-blue-500 rounded-md hover:bg-blue-700"
-                >
-                  <Search size={20} />
+                  onClick={toggleSearchVisibility} // Toggle search input visibility
+                  className="p-2 m-1 bg-blue-500 top-3ext-white hover:bg-blue-700 rounded-xl" // Added background color
+                  >
+                  <Search size={20} /> {/* Search icon */}
                 </button>
-                {isSearchInputVisible && (
-                  <input
-                    type="text"
-                    placeholder="Search field..."
-                    className="px-3 py-2 ml-2 border border-gray-300 rounded-md"
-                    value={searchFieldTerm}
-                    onChange={handleFieldSearch}
-                  />
+                {isSearchVisible && ( // Conditionally render the search input
+                  
+                    <input
+                      type="text"
+                      placeholder="Search fields..."
+                      value={searchFieldTerm}
+                      onChange={handleFieldSearch} // Update this function to handle search
+                      className="w-1/3 p-2 mr-2 border border-gray-300 rounded-md" // Set width and margin-right
+                    />
+                  
                 )}
               </div>
-              <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-4">
+              <form onSubmit={handleSubmit} className="grid grid-cols-4 gap-4">
                 {/* ... existing form fields ... */}
                 <div>
                   <label
@@ -1351,15 +1384,20 @@ const [isDisabled, setIsDisabled] = useState(false);
                     Asset Tag Number
                   </label>
                   <input
-                type="text"
-                id="asset_tag_number"
-                name="asset_tag_number"
-                className={`w-full p-1 border border-gray-300 rounded-md ${duplicateFields.asset_tag_number ? "border-red-500" : ""}`}
-                value={form.asset_tag_number}
-                onChange={handleInputChange}
-                
-            />
-             {duplicateFields.asset_tag_number && <span className="text-red-500">{errorMessages.asset_tag_number}</span>}
+                    type="text"
+                    id="asset_tag_number"
+                    name="asset_tag_number"
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      duplicateFields.asset_tag_number ? "border-red-500" : ""
+                    }`}
+                    value={form.asset_tag_number}
+                    onChange={handleInputChange}
+                  />
+                  {duplicateFields.asset_tag_number && (
+                    <span className="text-red-500">
+                      {errorMessages.asset_tag_number}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label
@@ -1650,15 +1688,20 @@ const [isDisabled, setIsDisabled] = useState(false);
                     MAC Address
                   </label>
                   <input
-                type="text"
-                id="mac_address"
-                name="mac_address"
-                className={`w-full p-1 border border-gray-300 rounded-md ${duplicateFields.mac_address ? "border-red-500" : ""}`}
-                value={form.mac_address}
-                onChange={handleInputChange}
-            />
-             {duplicateFields.mac_address && <span className="text-red-500">{errorMessages.mac_address}</span>}
-             
+                    type="text"
+                    id="mac_address"
+                    name="mac_address"
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      duplicateFields.mac_address ? "border-red-500" : ""
+                    }`}
+                    value={form.mac_address}
+                    onChange={handleInputChange}
+                  />
+                  {duplicateFields.mac_address && (
+                    <span className="text-red-500">
+                      {errorMessages.mac_address}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label
@@ -1687,15 +1730,20 @@ const [isDisabled, setIsDisabled] = useState(false);
                     IP Address
                   </label>
                   <input
-                type="text"
-                id="ip_address"
-                name="ip_address"
-                className={`w-full p-1 border border-gray-300 rounded-md ${duplicateFields.ip_address ? "border-red-500" : ""}`}
-                value={form.ip_address}
-                onChange={handleInputChange}
-                
-            />
-            {duplicateFields.ip_address && <span className="text-red-500">{errorMessages.ip_address}</span>}
+                    type="text"
+                    id="ip_address"
+                    name="ip_address"
+                    className={`w-full p-1 border border-gray-300 rounded-md ${
+                      duplicateFields.ip_address ? "border-red-500" : ""
+                    }`}
+                    value={form.ip_address}
+                    onChange={handleInputChange}
+                  />
+                  {duplicateFields.ip_address && (
+                    <span className="text-red-500">
+                      {errorMessages.ip_address}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label
@@ -2473,7 +2521,7 @@ const [isDisabled, setIsDisabled] = useState(false);
                   />
                 </div>
 
-                <div className="flex justify-end col-span-3 mt-4 space-x-4">
+                <div className="flex justify-center col-span-4 mt-4 space-x-4">
                   <button
                     type="submit"
                     className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
@@ -2493,24 +2541,28 @@ const [isDisabled, setIsDisabled] = useState(false);
         </div>
       )}
       {isReportFormVisible && ( // Render the report form when visible
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
-      <h2 className="mb-4 text-xl font-semibold text-center">Report Information</h2>
-      <p>This page allows you to manage vendor repairs. You can add, edit, delete, and import vendor repair records.</p>
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={toggleReportForm}
-          className="px-4 py-2 text-red-500 hover:text-red-600"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full p-8 mx-4 bg-white border border-gray-300 rounded-md shadow-md h-90 max-w-96">
+            <h2 className="mb-4 text-xl font-semibold text-center">
+              Report Information
+            </h2>
+            <p>
+              This page allows you to manage vendor repairs. You can add, edit,
+              delete, and import vendor repair records.
+            </p>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={toggleReportForm}
+                className="px-4 py-2 text-red-500 hover:text-red-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
 
 export default ServerComponent;
-

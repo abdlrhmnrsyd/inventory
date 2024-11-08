@@ -859,19 +859,7 @@ const PcComponent = () => {
                         <TableCell>{pc.business_unit}</TableCell>
                         <TableCell>{pc.department}</TableCell>
                         <TableCell>{pc.username}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-md ${
-                              pc.status === "OK"
-                                ? "bg-green-500 text-white"
-                                : pc.status === "Scrap"
-                                ? "bg-red-500 text-white"
-                                : "bg-gray-500 text-white"
-                            }`}
-                          >
-                            {pc.status}
-                          </span>
-                        </TableCell>
+                        <TableCell>{pc.status}</TableCell>
                         <TableCell>
                           <button
                             onClick={() => handleEdit(pc)}

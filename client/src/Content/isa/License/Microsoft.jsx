@@ -124,6 +124,12 @@ const MicrosoftComponent = () => {
         ...prevForm,
         [name]: value,
       };
+      
+        // Update input errors based on the current value
+        setInputErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: !value, // Set error if the value is empty
+      }));
 
       // Update account based on company selection
       if (name === "company_name") {
@@ -721,7 +727,7 @@ const MicrosoftComponent = () => {
                         htmlFor="products_name"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Products Name
+                        Products Name <span className="text-red-500">*</span>
                       </label>
                       <select
                         id="products_name"
@@ -763,7 +769,7 @@ const MicrosoftComponent = () => {
                         htmlFor="account"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Account
+                        Account <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -779,7 +785,7 @@ const MicrosoftComponent = () => {
                         htmlFor="sku_number"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        SKU Number
+                        SKU Number <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -795,7 +801,7 @@ const MicrosoftComponent = () => {
                         htmlFor="department"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Department
+                        Department <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -815,7 +821,7 @@ const MicrosoftComponent = () => {
                         htmlFor="user_name"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        User Name
+                        User Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -831,7 +837,7 @@ const MicrosoftComponent = () => {
                         htmlFor="version"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Version
+                        Version <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -847,7 +853,7 @@ const MicrosoftComponent = () => {
                         htmlFor="type_license"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Type License
+                        Type License <span className="text-red-500">*</span>
                       </label>
                       <select
                         id="type_license"
@@ -882,7 +888,7 @@ const MicrosoftComponent = () => {
                         htmlFor="qty"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Quantity
+                        Quantity <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -902,7 +908,7 @@ const MicrosoftComponent = () => {
                         htmlFor="effective_date"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Effective Date
+                        Effective Date <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -918,7 +924,7 @@ const MicrosoftComponent = () => {
                         htmlFor="expired_date"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Expired Date
+                        Expired Date <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -934,7 +940,7 @@ const MicrosoftComponent = () => {
                         htmlFor="po"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        PO
+                        PO <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -950,7 +956,7 @@ const MicrosoftComponent = () => {
                         htmlFor="vendor_name"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Vendor Name
+                        Vendor Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -966,7 +972,7 @@ const MicrosoftComponent = () => {
                         htmlFor="email_vendor"
                         className="block mb-1 font-medium text-gray-700"
                       >
-                        Vendor Email
+                        Vendor Email <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="email"

@@ -129,6 +129,13 @@ const VendorRepairComponent = () => {
 
     setForm({ ...form, [name]: formattedValue });
 
+    // Check for empty fields to set input errors
+    if (!formattedValue) {
+      setInputErrors((prevErrors) => ({ ...prevErrors, [name]: true }));
+    } else {
+      setInputErrors((prevErrors) => ({ ...prevErrors, [name]: false }));
+    }
+
     if (name === "ticket_number") {
       const isDuplicateTicketNumber = vendorRepair.some(
         (repair) => repair.ticket_number.toLowerCase() === value.toLowerCase() // Perbandingan tanpa memperhatikan huruf besar/kecil
@@ -145,11 +152,14 @@ const VendorRepairComponent = () => {
     }
   };
 
+
   const [inputErrors, setInputErrors] = useState({});
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+     
     const requiredFields = [
       "repair_date",
       "ticket_number",
@@ -259,6 +269,7 @@ const VendorRepairComponent = () => {
     }
   };
 
+  
   const handleEdit = (repair) => {
     setForm({
       ...repair,
@@ -266,7 +277,7 @@ const VendorRepairComponent = () => {
       quotation_date: dayjs(repair.quotation_date).format("YYYY-MM-DD"),
       date: dayjs(repair.date).format("YYYY-MM-DD"),
     });
-    setFormVisible(true);
+    setFormVisible(true); // Menampilkan modal
   };
 
   const handleDelete = async (id) => {
@@ -718,16 +729,15 @@ const VendorRepairComponent = () => {
                 </button>
               </div>
 
-              {isFormVisible && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="h-full max-w-3xl p-8 mx-2 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-md">
-                    <h2 className="mb-4 text-xl font-semibold text-center">
-                      {form.id ? "Edit Vendor Repair" : "Add Vendor Repair"}
-                    </h2>
-                    <form
-                      onSubmit={handleSubmit}
-                      className="grid grid-cols-3 gap-6"
-                    >
+              
+{isFormVisible && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="h-full max-w-3xl p-8 mx-2 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-md">
+      <h2 className="mb-4 text-xl font-semibold text-center">
+        {form.id ? "Edit Vendor Repair" : "Add Vendor Repair"}
+      </h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-6">
+                    
                       <div className="col-span-1">
                         <label htmlFor="repair_date">
                           Repair Date <span className="text-red-500">*</span>
@@ -966,7 +976,7 @@ const VendorRepairComponent = () => {
                           disabled={isTicketNumberDuplicate}
                         />
                       </div>
-                      <div className="flex justify-end col-span-3 mt-4 space-x-4">
+                      <div className="flex justify-end mt-4">
                         <button
                           type="submit"
                           className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
@@ -974,11 +984,11 @@ const VendorRepairComponent = () => {
                           Save
                         </button>
                         <button
-                          onClick={toggleForm}
-                          className="px-4 py-2 text-red-500 hover:text-red-600"
-                        >
-                          Cancel
-                        </button>
+          onClick={() => setFormVisible(false)} // Menutup modal
+          className="px-4 py-2 text-red-500 hover:text-red-600"
+        >
+          Cancel
+        </button>
                       </div>
                     </form>
                   </div>
